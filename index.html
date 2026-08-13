@@ -379,7 +379,9 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 
 /* ===== Bill Calendar ===== */
 .bill-cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--space-2); }
-.bill-cal-day { background: var(--surface-offset); border: 1px solid var(--divider); border-left: 3px solid var(--info); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 2px; transition: all var(--transition); }
+.bill-cal-day { position: relative; background: var(--surface-offset); border: 1px solid var(--divider); border-left: 3px solid var(--info); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); display: flex; flex-direction: column; gap: 2px; transition: all var(--transition); }
+.bill-cal-day.due-soon { border-color: var(--crimson); }
+.due-soon-badge { position: absolute; top: -8px; right: 8px; background: var(--crimson); color: #fff; font-family: var(--font-display); font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: var(--radius-full); white-space: nowrap; }
 .bill-cal-day:hover { transform: translateY(-1px); border-color: var(--border-glow); }
 .bill-cal-day.high { border-left-color: var(--expense); }
 .bill-cal-day.med { border-left-color: var(--debt); }
@@ -431,6 +433,16 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .countdown-progress-fill { height: 100%; background: linear-gradient(90deg, var(--debt), var(--gold), var(--income)); border-radius: var(--radius-full); box-shadow: 0 0 12px var(--income); transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
 .countdown-progress-labels { display: flex; justify-content: space-between; margin-top: var(--space-2); font-size: 9px; color: var(--text-muted); font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; }
 .countdown-celebrate { margin-top: var(--space-4); font-size: var(--text-xs); color: var(--income); font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; position: relative; z-index: 1; }
+
+/* ===== What-If Extra Payment ===== */
+.whatif-row { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); }
+.whatif-row input[type="range"] { flex: 1; accent-color: var(--info); height: 6px; }
+.whatif-amt { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; color: var(--info); min-width: 80px; text-align: right; }
+.whatif-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+@media (max-width: 640px) { .whatif-stats { grid-template-columns: 1fr; } }
+.whatif-stat { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; }
+.whatif-stat .ws-label { display: block; font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: var(--space-1); }
+.whatif-stat .ws-val { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; }
 
 /* Edit panel: selects */
 .edit-field select { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); font-size: var(--text-sm); font-family: var(--font-body); width: 100%; }
@@ -675,6 +687,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
       <div class="section-title mt-4" style="margin-top: var(--space-6);">Paycheck Allocation Plan</div>
       <p class="text-muted mb-4" style="font-size: var(--text-xs);" id="alloc-desc"></p>
       <div class="paycheck-grid" id="paycheck-grid"></div>
+
+      <!-- Monthly Trend -->
+      <div class="section-title mt-4" style="margin-top: var(--space-6);">Monthly Trend</div>
+      <div class="card">
+        <div class="card-title">Income, Expenses & Debt Over Time</div>
+        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3);" id="trend-desc">Each time you open the app, this month's numbers are saved on this device. Come back next month to see your trend build.</p>
+        <div class="chart-container" id="trend-chart-wrap" style="display:none;"><canvas id="trendChart"></canvas></div>
+      </div>
     </div>
 
     <!-- Expenses Tab -->
@@ -703,6 +723,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
           <div class="leg"><span class="swatch high"></span> High (over $200)</div>
           <div class="leg"><span class="swatch med"></span> Medium ($50–200)</div>
           <div class="leg"><span class="swatch low"></span> Small (under $50)</div>
+          <div class="leg"><span class="swatch" style="background: var(--crimson);"></span> Due soon (within 5 days)</div>
         </div>
       </div>
     </div>
@@ -721,6 +742,22 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         </div>
         <div class="countdown-celebrate" id="cd-celebrate">Every payment brings you closer to freedom</div>
       </div>
+
+      <!-- What If: Extra Payment -->
+      <div class="card mb-6">
+        <div class="card-title">What If You Paid More?</div>
+        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Drag the slider to see how an extra monthly payment speeds up your debt-free date. This doesn't change your actual plan.</p>
+        <div class="whatif-row">
+          <input type="range" id="whatif-slider" min="0" max="500" step="25" value="0" aria-label="Extra monthly payment">
+          <div class="whatif-amt" id="whatif-amt">+$0/mo</div>
+        </div>
+        <div class="whatif-stats">
+          <div class="whatif-stat"><span class="ws-label">New Debt-Free</span><span class="ws-val text-income" id="whatif-months">—</span></div>
+          <div class="whatif-stat"><span class="ws-label">Time Saved</span><span class="ws-val text-info" id="whatif-saved">—</span></div>
+          <div class="whatif-stat"><span class="ws-label">New Target Date</span><span class="ws-val text-savings" id="whatif-date">—</span></div>
+        </div>
+      </div>
+
       <div class="grid-2 mb-6">
         <div class="card"><div class="card-title">Debt Breakdown (Snowball Order)</div><div class="chart-container"><canvas id="debtChart"></canvas></div></div>
         <div class="card"><div class="card-title">Payoff Timeline (Est.)</div><div class="chart-container"><canvas id="payoffChart"></canvas></div></div>
@@ -1216,7 +1253,7 @@ function render() {
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
   renderNetWorth(); renderSavingsGoals(); renderBillCalendar();
-  updatePlan(currentPlan); renderCharts();
+  updatePlan(currentPlan); renderCharts(); renderTrend();
 }
 
 function renderPaycheckAllocation() {
@@ -1375,6 +1412,13 @@ function renderSavingsGoals() {
 }
 
 // ===== Bill Calendar =====
+function daysUntilDue(dueDay) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let target = new Date(now.getFullYear(), now.getMonth(), dueDay);
+  if (target < startOfToday) target = new Date(now.getFullYear(), now.getMonth() + 1, dueDay);
+  return Math.round((target - startOfToday) / 86400000);
+}
 function renderBillCalendar() {
   const grid = document.getElementById('bill-cal-grid');
   if (!grid) return;
@@ -1384,7 +1428,11 @@ function renderBillCalendar() {
   grid.innerHTML = bills.map(e => {
     const day = parseInt(e.dueDay) || 1;
     const cls = tier(e.amount);
-    return `<div class="bill-cal-day ${cls}">
+    const daysLeft = daysUntilDue(day);
+    const dueSoon = daysLeft <= 5;
+    const badgeText = daysLeft === 0 ? 'Due Today' : daysLeft === 1 ? 'Due Tomorrow' : `Due in ${daysLeft}d`;
+    return `<div class="bill-cal-day ${cls}${dueSoon ? ' due-soon' : ''}">
+      ${dueSoon ? `<span class="due-soon-badge">${badgeText}</span>` : ''}
       <div class="bcd-day">Day ${day}</div>
       <div class="bcd-name">${e.label}</div>
       <div class="bcd-amt">${fmtShort(e.amount)}</div>
@@ -1471,6 +1519,36 @@ function renderDebtFreeCountdown() {
     else if (progPct >= 75) celebrate.textContent = 'Almost there — the finish line is in sight!';
     else if (progPct >= 50) celebrate.textContent = 'Past the halfway mark — momentum is building!';
     else celebrate.textContent = 'Every payment brings you closer to freedom';
+  }
+  updateWhatIf();
+}
+
+// ===== What If: Extra Payment Simulator =====
+function updateWhatIf() {
+  const slider = document.getElementById('whatif-slider');
+  const amtEl = document.getElementById('whatif-amt');
+  const monthsEl = document.getElementById('whatif-months');
+  const savedEl = document.getElementById('whatif-saved');
+  const dateEl = document.getElementById('whatif-date');
+  if (!slider || !finances) return;
+  const extra = parseInt(slider.value) || 0;
+  if (amtEl) amtEl.textContent = '+' + fmtShort(extra) + '/mo';
+  const p = finances.plans[currentPlan] || finances.plans.balanced;
+  if (finances.totalDebt <= 0) {
+    if (monthsEl) monthsEl.textContent = 'Debt-free!';
+    if (savedEl) savedEl.textContent = '—';
+    if (dateEl) dateEl.textContent = '—';
+    return;
+  }
+  const sim = simulateSnowball(DATA.debts.map(d => d.amount), p.monthlyDebt + extra, finances.ccMinimums, p.thirdDebt);
+  const baseMonths = p.debtFreeMonths;
+  const newMonths = sim.months;
+  const savedMonths = Math.max(0, baseMonths - newMonths);
+  if (monthsEl) monthsEl.textContent = fmtDebtFree(newMonths);
+  if (savedEl) savedEl.textContent = savedMonths > 0 ? `${savedMonths} month${savedMonths === 1 ? '' : 's'} sooner` : (extra > 0 ? 'Same timeline' : '—');
+  if (dateEl) {
+    if (newMonths === 0) { dateEl.textContent = 'Already there!'; }
+    else { const d = new Date(); d.setMonth(d.getMonth() + newMonths); dateEl.textContent = `${d.toLocaleString('en-US', { month: 'long' })} ${d.getFullYear()}`; }
   }
 }
 
@@ -1590,6 +1668,10 @@ document.querySelectorAll('.plan-select-btn').forEach(btn => btn.addEventListene
 // Debt mode toggle
 document.querySelectorAll('.debt-mode-btn').forEach(btn => btn.addEventListener('click', () => { DATA.debtPaymentMode = btn.dataset.mode; render(); }));
 
+// What-if extra payment slider
+const whatifSliderEl = document.getElementById('whatif-slider');
+if (whatifSliderEl) whatifSliderEl.addEventListener('input', updateWhatIf);
+
 // Charts
 function getCSS(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
 function chartColors() { return { text: getCSS('--text-muted'), border: getCSS('--border'), surface: getCSS('--surface'), expense: getCSS('--expense'), debt: getCSS('--debt'), savings: getCSS('--savings'), income: getCSS('--income'), info: getCSS('--info'), bg: getCSS('--bg') }; }
@@ -1601,6 +1683,68 @@ function renderDebtChart() { const c = chartColors(); const ctx = document.getEl
 let payoffChartInstance = null;
 function renderPayoffChart() { const c = chartColors(); const ctx = document.getElementById('payoffChart'); if (!ctx) return; if (payoffChartInstance) payoffChartInstance.destroy(); if (!finances || !finances.plans) return; const p = finances.plans[currentPlan]; const totalDebt = finances.totalDebt; if (totalDebt <= 0) { payoffChartInstance = new Chart(ctx, { type: 'line', data: { labels: ['M0'], datasets: [{ label: 'Remaining Debt', data: [0], borderColor: c.income, backgroundColor: c.income + '20', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: c.border }, ticks: { color: c.text } }, y: { grid: { color: c.border }, ticks: { color: c.text, callback: v => '$' + v.toLocaleString() }, beginAtZero: true } } } }); return; } const months = []; const remaining = []; let bal = totalDebt; const maxMonths = p.debtFreeMonths + 1; for (let m = 0; m <= maxMonths; m++) { months.push(`M${m}`); if (bal > 0 && m > 0) { let payment = p.monthlyDebt; if (m % 3 === 0) payment += p.thirdDebt; bal = Math.max(0, bal - payment); } remaining.push(bal); } payoffChartInstance = new Chart(ctx, { type: 'line', data: { labels: months, datasets: [{ label: 'Remaining Debt', data: remaining, borderColor: c.debt, backgroundColor: c.debt + '20', fill: true, tension: 0.3, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { title: (ctx) => `Month ${ctx[0].label.replace('M', '')}`, label: (ctx) => `Remaining: $${ctx.raw.toLocaleString()}` } } }, scales: { x: { grid: { color: c.border, drawBorder: false }, ticks: { color: c.text, font: { size: 9 } } }, y: { grid: { color: c.border, drawBorder: false }, ticks: { color: c.text, font: { size: 9 }, callback: (v) => '$' + v.toLocaleString() }, beginAtZero: true } } } }); }
 function renderCharts() { renderExpenseChart(); renderDebtChart(); renderPayoffChart(); }
+
+// ===== Monthly History / Trend =====
+const HISTORY_KEY = 'budgetforge-history';
+function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+function loadHistory() {
+  if (!storageOk) return [];
+  try { const raw = window[LS_KEY].getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+}
+function saveHistorySnapshot() {
+  if (!storageOk || !finances) return [];
+  const key = monthKey(new Date());
+  let history = loadHistory();
+  const entry = { month: key, income: finances.income2, expenses: finances.totalExpenses, debt: finances.totalDebt, surplus: finances.surplus2 };
+  const idx = history.findIndex(h => h.month === key);
+  if (idx >= 0) history[idx] = entry; else history.push(entry);
+  history.sort((a, b) => a.month.localeCompare(b.month));
+  if (history.length > 24) history = history.slice(-24);
+  try { window[LS_KEY].setItem(HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+  return history;
+}
+let trendChartInstance = null;
+function renderTrend() {
+  const wrap = document.getElementById('trend-chart-wrap');
+  const desc = document.getElementById('trend-desc');
+  if (!wrap) return;
+  if (!storageOk) {
+    wrap.style.display = 'none';
+    if (desc) desc.textContent = "Trend history needs browser storage, which isn't available in this preview.";
+    return;
+  }
+  const history = saveHistorySnapshot();
+  if (!history || history.length < 2) {
+    wrap.style.display = 'none';
+    if (desc) desc.textContent = "Each time you open the app, this month's numbers are saved on this device. Come back next month to see your trend build.";
+    return;
+  }
+  wrap.style.display = '';
+  if (desc) desc.textContent = `Tracking ${history.length} months of activity on this device.`;
+  const c = chartColors();
+  const ctx = document.getElementById('trendChart');
+  if (!ctx) return;
+  if (trendChartInstance) trendChartInstance.destroy();
+  trendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: history.map(h => h.month),
+      datasets: [
+        { label: 'Income', data: history.map(h => h.income), borderColor: c.income, backgroundColor: c.income + '20', tension: 0.3, pointRadius: 3 },
+        { label: 'Expenses', data: history.map(h => h.expenses), borderColor: c.expense, backgroundColor: c.expense + '20', tension: 0.3, pointRadius: 3 },
+        { label: 'Debt', data: history.map(h => h.debt), borderColor: c.debt, backgroundColor: c.debt + '20', tension: 0.3, pointRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: c.text, font: { size: 10, family: 'Inter, sans-serif' }, padding: 8, boxWidth: 10 } }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` } } },
+      scales: {
+        x: { grid: { color: c.border, drawBorder: false }, ticks: { color: c.text, font: { size: 9 } } },
+        y: { grid: { color: c.border, drawBorder: false }, ticks: { color: c.text, font: { size: 9 }, callback: (v) => '$' + v.toLocaleString() }, beginAtZero: true }
+      }
+    }
+  });
+}
 
 // Save / Load via file download/upload
 function saveData() {
