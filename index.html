@@ -425,6 +425,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 @keyframes lockShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
 
 /* Auth screen */
+/* Loading screen */
+.loading-screen { display: none; position: fixed; inset: 0; z-index: 650; background: linear-gradient(180deg, rgba(10,10,20,0.25), rgba(10,10,20,0.8)), url('/loading-tree.jpg') center/cover no-repeat, var(--bg); align-items: flex-end; justify-content: center; padding: var(--space-4) var(--space-4) 15vh; }
+.loading-screen.open { display: flex; }
+.loading-content { text-align: center; color: #fff; }
+.loading-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; margin: 0 auto var(--space-3); animation: loadingSpin 0.8s linear infinite; }
+@keyframes loadingSpin { to { transform: rotate(360deg); } }
+.loading-text { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+
 .auth-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 600; align-items: center; justify-content: center; padding: var(--space-4); overflow-y: auto; }
 .auth-screen.open { display: flex; }
 .auth-box { max-width: 360px; }
@@ -671,6 +679,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 </style>
 </head>
 <body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Getting your dashboard ready…</div>
+  </div>
+</div>
 
 <!-- Auth Screen -->
 <div class="auth-screen" id="auth-screen">
@@ -2812,24 +2828,36 @@ function updateAccountUI(user) {
   ['sign-out-toggle', 'm-sign-out-toggle'].forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = user ? '' : 'none'; });
 }
 
+function showLoadingScreen(callback, duration) {
+  const el = document.getElementById('loading-screen');
+  if (!el) { callback(); return; }
+  el.classList.add('open');
+  setTimeout(() => {
+    el.classList.remove('open');
+    callback();
+  }, duration || 1300);
+}
+
 function onUserSignedIn(user) {
   currentUser = user;
   updateAccountUI(user);
-  if (!storageOk) { setupPersistentButtons(); buildEditPanel(); render(); initLock(); startBannerRotation(); checkQuickAddShortcut(); return; }
-  let saved = null;
-  try { saved = window[LS_KEY].getItem(userDataKey(user.uid)); } catch (e) {}
-  if (saved) {
-    try { DATA = JSON.parse(saved); if (!DATA.debtPaymentMode) DATA.debtPaymentMode = 'snowball'; } catch (e) {}
-    setupPersistentButtons();
-    buildEditPanel();
-    render();
-    initLock();
-    startBannerRotation();
-    if (!checkQuickAddShortcut()) openStatsPopup();
-  } else {
-    setupPersistentButtons();
-    startOnboarding(user);
-  }
+  showLoadingScreen(() => {
+    if (!storageOk) { setupPersistentButtons(); buildEditPanel(); render(); initLock(); startBannerRotation(); checkQuickAddShortcut(); return; }
+    let saved = null;
+    try { saved = window[LS_KEY].getItem(userDataKey(user.uid)); } catch (e) {}
+    if (saved) {
+      try { DATA = JSON.parse(saved); if (!DATA.debtPaymentMode) DATA.debtPaymentMode = 'snowball'; } catch (e) {}
+      setupPersistentButtons();
+      buildEditPanel();
+      render();
+      initLock();
+      startBannerRotation();
+      if (!checkQuickAddShortcut()) openStatsPopup();
+    } else {
+      setupPersistentButtons();
+      startOnboarding(user);
+    }
+  });
 }
 
 function initAuth() {
