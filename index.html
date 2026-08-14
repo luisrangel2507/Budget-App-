@@ -11,6 +11,32 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script>
+  // ===== Firebase Setup (required for Google / Email sign-in) =====
+  // 1. Go to https://console.firebase.google.com and create a free project.
+  // 2. Build > Authentication > Get Started > enable the "Google" and "Email/Password" providers.
+  // 3. Project settings (gear icon) > General > "Your apps" > Add app > Web (</>) > register it.
+  //    Firebase will show you a firebaseConfig object — copy it and paste it below,
+  //    replacing the placeholder values. These values are meant to be public/client-side,
+  //    it's safe to leave them in this file.
+  // 4. Host this file somewhere with a real https:// domain (Firebase Hosting is free and
+  //    built for this: run `firebase init hosting` then `firebase deploy`). Google/email
+  //    sign-in will NOT work when this file is opened directly (file://) or from most
+  //    generic static hosts unless that domain is added under Authentication > Settings >
+  //    Authorized domains. Firebase Hosting's *.web.app domain is authorized automatically.
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  const firebaseReady = firebaseConfig.apiKey !== "YOUR_API_KEY";
+  if (firebaseReady) { firebase.initializeApp(firebaseConfig); }
+</script>
 
 <style>
 :root {
@@ -348,6 +374,38 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .lock-shake { animation: lockShake 0.4s; }
 @keyframes lockShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
 
+/* Auth screen */
+.auth-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 600; align-items: center; justify-content: center; padding: var(--space-4); overflow-y: auto; }
+.auth-screen.open { display: flex; }
+.auth-box { max-width: 360px; }
+.auth-left, .lock-input.auth-left { text-align: left; letter-spacing: normal; }
+.auth-social { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
+.auth-btn { display: flex; align-items: center; justify-content: center; gap: var(--space-3); width: 100%; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface-offset); color: var(--text); font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600; transition: all var(--transition); }
+.auth-btn:hover:not(:disabled) { border-color: var(--border-glow); background: var(--surface); }
+.auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-soon { font-family: var(--font-display); font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--info-bg); color: var(--info); padding: 2px 6px; border-radius: var(--radius-full); margin-left: var(--space-1); }
+.auth-divider { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); font-size: var(--text-xs); color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--divider); }
+
+/* Onboarding wizard */
+.onboarding-box { max-width: 420px; width: 100%; text-align: left; }
+.onboarding-box .lock-title, .onboarding-box .lock-subtitle { text-align: center; }
+.onboarding-progress { height: 4px; background: var(--surface-offset); border-radius: var(--radius-full); overflow: hidden; margin-bottom: var(--space-2); }
+.onboarding-progress-fill { height: 100%; background: var(--info); border-radius: var(--radius-full); transition: width 0.3s ease; }
+.onboarding-step-label { text-align: center; font-family: var(--font-display); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-5); }
+.onboarding-step { display: none; }
+.onboarding-step.active { display: block; }
+.onboarding-step .lock-input { margin-bottom: 0; }
+.onboarding-step .lock-input + .lock-input { margin-top: var(--space-3); }
+.onboarding-rows { display: flex; flex-direction: column; gap: var(--space-2); max-height: 240px; overflow-y: auto; }
+.onboarding-row { display: grid; grid-template-columns: 1fr 90px 60px auto; gap: var(--space-2); align-items: center; }
+.onboarding-row .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
+#ob-debt-rows .onboarding-row { grid-template-columns: 1fr 100px auto; }
+.onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
+.onboarding-actions .btn { flex: 1; padding: var(--space-3); }
+.sidebar-account { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 480px) { .onboarding-row { grid-template-columns: 1fr; } #ob-debt-rows .onboarding-row { grid-template-columns: 1fr; } }
+
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .mobile-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--surface); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 60; }
@@ -493,6 +551,85 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 </head>
 <body>
 
+<!-- Auth Screen -->
+<div class="auth-screen" id="auth-screen">
+  <div class="lock-box auth-box">
+    <img class="lock-logo" src="data:image/png;base64,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" alt="Budget Agent">
+    <div class="lock-title">Budget Agent</div>
+    <div class="lock-subtitle" id="auth-subtitle">Sign in to continue</div>
+
+    <div class="auth-social">
+      <button type="button" class="auth-btn auth-btn-google" id="btn-google-signin">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.92c1.71-1.57 2.68-3.88 2.68-6.64z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34C2.44 15.98 5.48 18 9 18z"/><path fill="#FBBC05" d="M3.97 10.71A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.29-1.71V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.34z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <button type="button" class="auth-btn auth-btn-apple" id="btn-apple-signin" disabled title="Coming soon — requires an Apple Developer account">
+        <svg width="16" height="16" viewBox="0 0 17 20" fill="currentColor"><path d="M14.94 10.5c-.02-2.13 1.74-3.15 1.82-3.2-1-1.45-2.54-1.65-3.09-1.67-1.31-.13-2.56.77-3.23.77-.67 0-1.7-.75-2.8-.73-1.44.02-2.77.84-3.5 2.12-1.5 2.6-.38 6.44 1.07 8.55.71 1.03 1.56 2.18 2.67 2.14 1.07-.04 1.48-.69 2.78-.69 1.29 0 1.66.69 2.79.67 1.16-.02 1.89-1.05 2.6-2.08.82-1.19 1.15-2.35 1.17-2.41-.03-.01-2.24-.86-2.27-3.4z"/><path d="M12.7 3.6c.59-.72 1-1.71.89-2.7-.86.03-1.9.57-2.51 1.29-.54.63-1.03 1.65-.9 2.62.94.07 1.9-.48 2.52-1.21z"/></svg>
+        Continue with Apple <span class="auth-soon">Soon</span>
+      </button>
+    </div>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <form id="auth-email-form" autocomplete="off">
+      <input type="text" id="auth-name" class="lock-input auth-left" placeholder="Your name" style="display:none;">
+      <input type="email" id="auth-email" class="lock-input auth-left" placeholder="Email" autocomplete="email">
+      <input type="password" id="auth-password" class="lock-input auth-left" placeholder="Password" autocomplete="current-password">
+      <div class="lock-error" id="auth-error"></div>
+      <button type="submit" class="btn btn-save lock-submit" id="auth-submit">Sign In</button>
+    </form>
+    <button class="lock-forgot" id="auth-toggle-mode">Don't have an account? Create one</button>
+    <p class="lock-note" id="auth-config-warning">This file isn't connected to a sign-in service yet — see the setup note in the file's &lt;head&gt; to enable Google/email sign-in.</p>
+    <button class="lock-forgot" id="auth-bypass" style="display:none; margin-top: var(--space-2);">Continue without signing in (testing)</button>
+  </div>
+</div>
+
+<!-- Onboarding Wizard -->
+<div class="lock-screen" id="onboarding-screen">
+  <div class="lock-box onboarding-box">
+    <div class="onboarding-progress"><div class="onboarding-progress-fill" id="ob-progress-fill" style="width:20%;"></div></div>
+    <div class="onboarding-step-label" id="ob-step-label">Step 1 of 5</div>
+
+    <div class="onboarding-step active" data-step="1">
+      <div class="lock-title" style="font-size: var(--text-lg);">Welcome!</div>
+      <div class="lock-subtitle">Let's set up your budget. What should we call you?</div>
+      <input type="text" id="ob-name" class="lock-input auth-left" placeholder="Your name">
+      <input type="text" id="ob-username" class="lock-input auth-left" placeholder="Pick a username" style="margin-top: var(--space-3);">
+    </div>
+
+    <div class="onboarding-step" data-step="2">
+      <div class="lock-title" style="font-size: var(--text-lg);">Your Income</div>
+      <div class="lock-subtitle">How much do you take home per paycheck?</div>
+      <input type="number" id="ob-biweekly" class="lock-input auth-left" placeholder="Bi-weekly take-home pay" min="0" step="1">
+    </div>
+
+    <div class="onboarding-step" data-step="3">
+      <div class="lock-title" style="font-size: var(--text-lg);">Fixed Expenses</div>
+      <div class="lock-subtitle">Add your recurring monthly bills. You can edit these anytime later.</div>
+      <div class="onboarding-rows" id="ob-expense-rows"></div>
+      <button type="button" class="btn btn-add" id="ob-add-expense" style="margin-top: var(--space-2);">+ Add Expense</button>
+    </div>
+
+    <div class="onboarding-step" data-step="4">
+      <div class="lock-title" style="font-size: var(--text-lg);">Your Debts</div>
+      <div class="lock-subtitle">Add any credit cards or loans you're paying down. Skip if you're debt-free.</div>
+      <div class="onboarding-rows" id="ob-debt-rows"></div>
+      <button type="button" class="btn btn-add" id="ob-add-debt" style="margin-top: var(--space-2);">+ Add Debt</button>
+    </div>
+
+    <div class="onboarding-step" data-step="5">
+      <div class="lock-title" style="font-size: var(--text-lg);">You're All Set</div>
+      <div class="lock-subtitle" id="ob-summary">Ready to see your dashboard?</div>
+    </div>
+
+    <div class="lock-error" id="ob-error"></div>
+    <div class="onboarding-actions">
+      <button type="button" class="btn btn-secondary" id="ob-back" style="display:none;">Back</button>
+      <button type="button" class="btn btn-save lock-submit" id="ob-next">Continue</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lock Screen -->
 <div class="lock-screen" id="lock-screen">
   <div class="lock-box">
@@ -573,6 +710,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
       <span>Budget Agent</span>
     </div>
     <div class="sidebar-subtitle">Personal Finance Dashboard</div>
+    <div class="sidebar-account" id="sidebar-account"></div>
   </div>
 
   <div class="theme-picker">
@@ -603,6 +741,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
     <button class="action-btn" id="edit-toggle" title="Edit your numbers" aria-label="Edit your numbers"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
     <button class="action-btn" id="howto-toggle" title="How to use" aria-label="How to use"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
     <button class="action-btn" id="lock-now-toggle" title="Lock now" aria-label="Lock now" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+    <button class="action-btn" id="sign-out-toggle" title="Sign out" aria-label="Sign out" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
   </div>
 </aside>
 
@@ -1310,6 +1449,7 @@ function render() {
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
   renderNetWorth(); renderSavingsGoals(); renderBillCalendar();
   updatePlan(currentPlan); renderCharts(); renderTrend();
+  persistUserData();
 }
 
 function renderPaycheckAllocation() {
@@ -1665,7 +1805,10 @@ function attachEditListeners() {
 }
 
 // Wire persistent (non-rebuilt) buttons ONCE so listeners don't accumulate when buildEditPanel() re-runs.
+let persistentButtonsWired = false;
 function setupPersistentButtons() {
+  if (persistentButtonsWired) return;
+  persistentButtonsWired = true;
   const wire = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
   wire('btn-add-expense', () => { const newIdx = DATA.expenses.length; DATA.expenses.push({ name: 'New Expense', label: 'New Expense', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need' }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-exp-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
   wire('btn-add-debt', () => { const newIdx = DATA.debts.length; DATA.debts.push({ name: 'New Debt', amount: 0 }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-debt-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
@@ -1871,6 +2014,265 @@ document.getElementById('btn-save').addEventListener('click', saveData);
 document.getElementById('btn-load').addEventListener('click', () => { document.getElementById('file-input').click(); });
 document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files.length > 0) loadDataFromFile(e.target.files[0]); e.target.value = ''; });
 
+// ===== Account Sign-In (Google / Email via Firebase) =====
+let currentUser = null;
+let authMode = 'signin';
+
+function userDataKey(uid) { return 'budgetagent-data-' + uid; }
+
+function friendlyAuthError(code) {
+  const map = {
+    'auth/invalid-email': 'That email address looks invalid.',
+    'auth/user-not-found': 'No account found with that email.',
+    'auth/wrong-password': 'Incorrect password.',
+    'auth/email-already-in-use': 'That email is already registered — try signing in instead.',
+    'auth/weak-password': 'Use at least 6 characters for your password.',
+    'auth/invalid-credential': 'Incorrect email or password.',
+    'auth/popup-closed-by-user': 'Sign-in was cancelled.',
+    'auth/unauthorized-domain': "This domain isn't authorized for sign-in yet — add it under Firebase Authentication > Settings > Authorized domains."
+  };
+  return (code && map[code]) || 'Something went wrong. Please try again.';
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const nameInput = document.getElementById('auth-name');
+  const submit = document.getElementById('auth-submit');
+  const toggle = document.getElementById('auth-toggle-mode');
+  const err = document.getElementById('auth-error');
+  if (err) err.textContent = '';
+  if (mode === 'signup') {
+    if (nameInput) nameInput.style.display = '';
+    if (submit) submit.textContent = 'Create Account';
+    if (toggle) toggle.textContent = 'Already have an account? Sign in';
+  } else {
+    if (nameInput) nameInput.style.display = 'none';
+    if (submit) submit.textContent = 'Sign In';
+    if (toggle) toggle.textContent = "Don't have an account? Create one";
+  }
+}
+
+function updateAccountUI(user) {
+  const el = document.getElementById('sidebar-account');
+  if (el) el.textContent = user ? (user.uid === 'local-guest' ? 'Guest (testing mode)' : (user.displayName || user.email || 'Signed in')) : '';
+  const signOutBtn = document.getElementById('sign-out-toggle');
+  if (signOutBtn) signOutBtn.style.display = user ? '' : 'none';
+}
+
+function onUserSignedIn(user) {
+  currentUser = user;
+  updateAccountUI(user);
+  if (!storageOk) { setupPersistentButtons(); buildEditPanel(); render(); initLock(); return; }
+  let saved = null;
+  try { saved = window[LS_KEY].getItem(userDataKey(user.uid)); } catch (e) {}
+  if (saved) {
+    try { DATA = JSON.parse(saved); if (!DATA.debtPaymentMode) DATA.debtPaymentMode = 'snowball'; } catch (e) {}
+    setupPersistentButtons();
+    buildEditPanel();
+    render();
+    initLock();
+  } else {
+    setupPersistentButtons();
+    startOnboarding(user);
+  }
+}
+
+function initAuth() {
+  const authScreen = document.getElementById('auth-screen');
+  const warning = document.getElementById('auth-config-warning');
+  const bypass = document.getElementById('auth-bypass');
+  if (!authScreen) return;
+  if (!firebaseReady) {
+    if (warning) warning.style.display = '';
+    if (bypass) bypass.style.display = '';
+    authScreen.classList.add('open');
+    return;
+  }
+  if (warning) warning.style.display = 'none';
+  if (bypass) bypass.style.display = 'none';
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      authScreen.classList.remove('open');
+      onUserSignedIn(user);
+    } else {
+      currentUser = null;
+      updateAccountUI(null);
+      authScreen.classList.add('open');
+    }
+  });
+}
+
+document.getElementById('btn-google-signin').addEventListener('click', async () => {
+  if (!firebaseReady) return;
+  const err = document.getElementById('auth-error');
+  if (err) err.textContent = '';
+  try {
+    await firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  } catch (e) {
+    if (err) err.textContent = friendlyAuthError(e.code);
+  }
+});
+
+document.getElementById('auth-toggle-mode').addEventListener('click', () => {
+  setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+});
+
+document.getElementById('auth-email-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('auth-error');
+  if (err) err.textContent = '';
+  if (!firebaseReady) { if (err) err.textContent = "This file isn't connected to a sign-in service yet."; return; }
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const name = document.getElementById('auth-name').value.trim();
+  if (!email || !password) { if (err) err.textContent = 'Enter an email and password.'; return; }
+  try {
+    if (authMode === 'signup') {
+      const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+      if (name && cred.user) { await cred.user.updateProfile({ displayName: name }); }
+    } else {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+    }
+  } catch (e2) {
+    if (err) err.textContent = friendlyAuthError(e2.code);
+  }
+});
+
+document.getElementById('sign-out-toggle').addEventListener('click', () => {
+  clearUnlockedThisSession();
+  if (currentUser && currentUser.uid === 'local-guest') {
+    currentUser = null;
+    updateAccountUI(null);
+    document.getElementById('lock-screen').classList.remove('open');
+    document.getElementById('auth-screen').classList.add('open');
+    return;
+  }
+  if (!firebaseReady) return;
+  firebase.auth().signOut();
+});
+
+document.getElementById('auth-bypass').addEventListener('click', () => {
+  document.getElementById('auth-screen').classList.remove('open');
+  onUserSignedIn({ uid: 'local-guest', displayName: '', email: '' });
+});
+
+// ===== Onboarding Wizard (first sign-in only) =====
+let obStep = 1;
+const OB_TOTAL_STEPS = 5;
+let obExpenses = [];
+let obDebts = [];
+
+function startOnboarding(user) {
+  obStep = 1; obExpenses = []; obDebts = [];
+  const nameInput = document.getElementById('ob-name');
+  const usernameInput = document.getElementById('ob-username');
+  const biweeklyInput = document.getElementById('ob-biweekly');
+  if (nameInput) nameInput.value = (user && user.displayName) || '';
+  if (usernameInput) usernameInput.value = '';
+  if (biweeklyInput) biweeklyInput.value = '';
+  renderObExpenseRows();
+  renderObDebtRows();
+  showObStep(1);
+  const screen = document.getElementById('onboarding-screen');
+  if (screen) screen.classList.add('open');
+}
+
+function showObStep(n) {
+  obStep = n;
+  document.querySelectorAll('.onboarding-step').forEach((s) => s.classList.toggle('active', parseInt(s.dataset.step) === n));
+  const label = document.getElementById('ob-step-label'); if (label) label.textContent = `Step ${n} of ${OB_TOTAL_STEPS}`;
+  const fill = document.getElementById('ob-progress-fill'); if (fill) fill.style.width = (n / OB_TOTAL_STEPS * 100) + '%';
+  const back = document.getElementById('ob-back'); if (back) back.style.display = n === 1 ? 'none' : '';
+  const next = document.getElementById('ob-next'); if (next) next.textContent = n === OB_TOTAL_STEPS ? 'Go to My Dashboard' : 'Continue';
+  const err = document.getElementById('ob-error'); if (err) err.textContent = '';
+  if (n === OB_TOTAL_STEPS) {
+    const name = (document.getElementById('ob-name').value || '').trim() || 'there';
+    const summary = document.getElementById('ob-summary');
+    if (summary) summary.textContent = `Nice to meet you, ${name}! You've logged ${obExpenses.length} expense${obExpenses.length === 1 ? '' : 's'} and ${obDebts.length} debt${obDebts.length === 1 ? '' : 's'}. You can edit any of this later from the pencil icon.`;
+  }
+}
+
+function renderObExpenseRows() {
+  const wrap = document.getElementById('ob-expense-rows');
+  if (!wrap) return;
+  wrap.innerHTML = obExpenses.map((e, i) => `<div class="onboarding-row">
+    <input type="text" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="name" placeholder="Name" value="${e.name || ''}">
+    <input type="number" class="lock-input auth-left ob-row-amt ob-row-input" data-idx="${i}" data-field="amount" placeholder="$" min="0" value="${e.amount || ''}">
+    <input type="number" class="lock-input auth-left ob-row-day ob-row-input" data-idx="${i}" data-field="dueDay" placeholder="Day" min="1" max="31" value="${e.dueDay || ''}">
+    <button type="button" class="btn-remove ob-row-remove" data-idx="${i}">✕</button>
+  </div>`).join('');
+  wireObRows(wrap, obExpenses, renderObExpenseRows);
+}
+
+function renderObDebtRows() {
+  const wrap = document.getElementById('ob-debt-rows');
+  if (!wrap) return;
+  wrap.innerHTML = obDebts.map((d, i) => `<div class="onboarding-row">
+    <input type="text" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="name" placeholder="Name" value="${d.name || ''}">
+    <input type="number" class="lock-input auth-left ob-row-amt ob-row-input" data-idx="${i}" data-field="amount" placeholder="$" min="0" value="${d.amount || ''}">
+    <button type="button" class="btn-remove ob-row-remove" data-idx="${i}">✕</button>
+  </div>`).join('');
+  wireObRows(wrap, obDebts, renderObDebtRows);
+}
+
+function wireObRows(wrap, arr, rerender) {
+  wrap.querySelectorAll('.ob-row-input').forEach((inp) => {
+    inp.addEventListener('input', () => {
+      const idx = parseInt(inp.dataset.idx);
+      const field = inp.dataset.field;
+      if (field === 'amount') arr[idx].amount = parseFloat(inp.value) || 0;
+      else if (field === 'dueDay') arr[idx].dueDay = Math.max(1, Math.min(31, parseInt(inp.value) || 1));
+      else arr[idx].name = inp.value;
+    });
+  });
+  wrap.querySelectorAll('.ob-row-remove').forEach((btn) => {
+    btn.addEventListener('click', () => { arr.splice(parseInt(btn.dataset.idx), 1); rerender(); });
+  });
+}
+
+document.getElementById('ob-add-expense').addEventListener('click', () => {
+  obExpenses.push({ name: '', label: '', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need' });
+  renderObExpenseRows();
+});
+document.getElementById('ob-add-debt').addEventListener('click', () => {
+  obDebts.push({ name: '', amount: 0 });
+  renderObDebtRows();
+});
+
+document.getElementById('ob-back').addEventListener('click', () => { if (obStep > 1) showObStep(obStep - 1); });
+document.getElementById('ob-next').addEventListener('click', () => {
+  const err = document.getElementById('ob-error');
+  if (obStep === 1) {
+    const name = document.getElementById('ob-name').value.trim();
+    if (!name) { if (err) err.textContent = 'Enter your name.'; return; }
+  }
+  if (obStep === 2) {
+    const bw = document.getElementById('ob-biweekly').value;
+    if (!bw || parseFloat(bw) <= 0) { if (err) err.textContent = 'Enter your take-home pay.'; return; }
+  }
+  if (obStep < OB_TOTAL_STEPS) { showObStep(obStep + 1); return; }
+  finishOnboarding();
+});
+
+function finishOnboarding() {
+  DATA.biweekly = parseFloat(document.getElementById('ob-biweekly').value) || 0;
+  DATA.expenses = obExpenses.filter((e) => e.name).map((e) => ({ ...e, label: e.name, fullAmount: e.amount }));
+  DATA.debts = obDebts.filter((d) => d.name).map((d) => ({ name: d.name, amount: d.amount }));
+  DATA.userName = document.getElementById('ob-name').value.trim();
+  DATA.userUsername = document.getElementById('ob-username').value.trim();
+  const screen = document.getElementById('onboarding-screen');
+  if (screen) screen.classList.remove('open');
+  persistUserData();
+  buildEditPanel();
+  render();
+  initLock();
+}
+
+function persistUserData() {
+  if (!storageOk || !currentUser) return;
+  try { window[LS_KEY].setItem(userDataKey(currentUser.uid), JSON.stringify(DATA)); } catch (e) {}
+}
+
 // ===== Lock Screen (local PIN — not a real account, just a privacy screen) =====
 const PIN_KEY = 'budgetforge-pin-hash';
 const UNLOCK_SESSION_KEY = 'budgetforge-unlocked';
@@ -2010,10 +2412,7 @@ if (storageOk) {
   document.getElementById('btn-save-default').style.display = 'none';
   document.getElementById('btn-clear-default').style.display = 'none';
 }
-initLock();
-setupPersistentButtons();
-buildEditPanel();
-render();
+initAuth();
 </script>
 <script data-pplx-inline-edit>
 (function () {
