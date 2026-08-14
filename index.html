@@ -1815,7 +1815,7 @@ function render() {
   document.getElementById('total-credits-val').textContent = fmtShort(actualCashflow);
   document.getElementById('total-credits-val').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
 
-  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
+  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(99, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
   document.getElementById('health-pct').textContent = healthPct + '%';
   document.getElementById('health-circle').setAttribute('stroke-dashoffset', 213.6 * (1 - healthPct / 100));
   document.getElementById('health-status').textContent = healthPct > 70 ? 'On Track' : healthPct > 40 ? 'Caution' : 'Critical';
@@ -2657,7 +2657,7 @@ function openStatsPopup() {
   const actualIncome = finances.income2 + monthTxn.income;
   const actualExpenses = finances.totalExpenses + monthTxn.expense;
   const actualCashflow = actualIncome - actualExpenses;
-  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, actualCashflow * 12))) * 100))) : 100;
+  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(99, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, actualCashflow * 12))) * 100))) : 100;
   const firstName = (DATA.userName || '').trim().split(' ')[0];
 
   const greetingEl = document.getElementById('stats-popup-greeting');
@@ -2901,7 +2901,7 @@ function showLoadingScreen(callback, duration) {
   setTimeout(() => {
     el.classList.remove('open');
     callback();
-  }, duration || 3500);
+  }, duration || 2500);
 }
 
 function onUserSignedIn(user) {
