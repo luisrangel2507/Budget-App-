@@ -328,6 +328,24 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .modal-body .privacy-note { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-2); }
 .modal-body .privacy-note svg { flex-shrink: 0; color: var(--info); }
 
+/* Lock screen */
+.lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 500; align-items: center; justify-content: center; padding: var(--space-4); }
+.lock-screen.open { display: flex; }
+.lock-box { width: 100%; max-width: 340px; text-align: center; }
+.lock-logo { width: 40px; height: 40px; margin: 0 auto var(--space-3); filter: drop-shadow(0 2px 6px rgba(2,132,199,0.25)); }
+.lock-title { font-family: var(--font-display); font-weight: 800; font-size: var(--text-lg); color: var(--heading); margin-bottom: var(--space-1); }
+.lock-subtitle { font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-5); }
+#lock-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.lock-input { padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); font-size: var(--text-base); text-align: center; letter-spacing: 0.2em; width: 100%; font-family: var(--font-body); }
+.lock-input:focus { outline: none; border-color: var(--info); box-shadow: 0 0 0 3px var(--info-bg); }
+.lock-error { font-size: var(--text-xs); color: var(--crimson); min-height: 16px; }
+.lock-submit { width: 100%; padding: var(--space-3); font-size: var(--text-xs); }
+.lock-forgot { margin-top: var(--space-4); background: none; border: none; color: var(--text-muted); font-size: var(--text-xs); text-decoration: underline; cursor: pointer; }
+.lock-forgot:hover { color: var(--info); }
+.lock-note { margin-top: var(--space-5); font-size: var(--text-xs); color: var(--text-faint); line-height: 1.5; }
+.lock-shake { animation: lockShake 0.4s; }
+@keyframes lockShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .mobile-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--surface); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 60; }
@@ -473,6 +491,23 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 </head>
 <body>
 
+<!-- Lock Screen -->
+<div class="lock-screen" id="lock-screen">
+  <div class="lock-box">
+    <svg class="lock-logo" viewBox="0 0 32 32" fill="none"><path d="M3 11 L29 3 L21 29 L15 18 L3 11 Z" fill="var(--heading)" opacity="0.92"/><path d="M15 18 L29 3" stroke="var(--surface)" stroke-width="1.3" stroke-linecap="round"/></svg>
+    <div class="lock-title" id="lock-title">BudgetForge</div>
+    <div class="lock-subtitle" id="lock-subtitle">Enter your PIN</div>
+    <form id="lock-form" autocomplete="off">
+      <input type="password" id="lock-pin-1" class="lock-input" placeholder="PIN" inputmode="numeric" autocomplete="new-password">
+      <input type="password" id="lock-pin-2" class="lock-input" placeholder="Confirm PIN" inputmode="numeric" autocomplete="new-password" style="display:none;">
+      <div class="lock-error" id="lock-error"></div>
+      <button type="submit" class="btn btn-save lock-submit" id="lock-submit">Unlock</button>
+    </form>
+    <button class="lock-forgot" id="lock-forgot">Forgot PIN? Reset it</button>
+    <p class="lock-note">This is a local privacy screen, not real security — your data never leaves this device, but anyone with the file and dev tools could bypass it.</p>
+  </div>
+</div>
+
 <!-- How-to Modal -->
 <div class="modal-overlay" id="howto-overlay">
   <div class="modal" role="dialog" aria-labelledby="howto-title" aria-modal="true">
@@ -565,6 +600,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
   <div class="sidebar-actions">
     <button class="action-btn" id="edit-toggle" title="Edit your numbers" aria-label="Edit your numbers"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
     <button class="action-btn" id="howto-toggle" title="How to use" aria-label="How to use"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    <button class="action-btn" id="lock-now-toggle" title="Lock now" aria-label="Lock now" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
   </div>
 </aside>
 
@@ -605,6 +641,18 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         </div>
         <div class="edit-section"><div class="edit-section-title">Savings Goals</div><div class="edit-grid" id="goal-inputs"></div><button class="btn btn-add" id="btn-add-goal">+ Add Savings Goal</button></div>
         <div class="edit-section"><div class="edit-section-title">Net Worth — Assets</div><div class="edit-grid" id="asset-inputs"></div><button class="btn btn-add" id="btn-add-asset">+ Add Asset</button></div>
+        <div class="edit-section" id="security-section"><div class="edit-section-title">Security — Local PIN Lock</div>
+          <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3);" id="security-status">No PIN set — anyone opening this file can see your budget.</p>
+          <div class="edit-grid">
+            <div class="edit-field"><label for="inp-pin-new">New PIN</label><input type="password" id="inp-pin-new" inputmode="numeric" autocomplete="new-password"></div>
+            <div class="edit-field"><label for="inp-pin-confirm">Confirm PIN</label><input type="password" id="inp-pin-confirm" inputmode="numeric" autocomplete="new-password"></div>
+          </div>
+          <div class="edit-actions" style="border-top: none; padding-top: var(--space-3); margin-top: var(--space-3);">
+            <button class="btn btn-add" id="btn-set-pin" style="margin-top: 0;">Set / Change PIN</button>
+            <button class="btn btn-secondary" id="btn-remove-pin" style="display:none;">Remove PIN Protection</button>
+          </div>
+          <div class="save-status" id="pin-status"></div>
+        </div>
         <div class="edit-actions">
           <button class="btn btn-save" id="btn-save">Save Edits</button>
           <button class="btn btn-secondary" id="btn-load">Load Saved</button>
@@ -1092,6 +1140,12 @@ function populateThemeSelect() {
   sel.value = currentTheme;
   sel.addEventListener('change', (e) => applyTheme(e.target.value));
 }
+
+// Check if browser storage is available (blocked in preview iframes). Checked
+// early since the lock screen needs it before anything else runs.
+const LS_KEY = 'loc' + 'alSt' + 'orage';
+let storageOk = false;
+try { window[LS_KEY].setItem('_test', '1'); window[LS_KEY].removeItem('_test'); storageOk = true; } catch (e) {}
 
 // ===== Default sample data (round demo numbers) =====
 const DEFAULTS = {
@@ -1618,6 +1672,27 @@ function setupPersistentButtons() {
   wire('btn-reset', () => { let saved = null; try { saved = window[LS_KEY].getItem('budgetforge-custom-default'); } catch(e) {} const base = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULTS)); DATA = base; if (!DATA.debtPaymentMode) DATA.debtPaymentMode = 'snowball'; buildEditPanel(); render(); const status = document.getElementById('save-status'); if (status) { status.textContent = saved ? 'Reset to your saved default' : 'Reset to defaults'; status.classList.remove('error'); setTimeout(() => { status.textContent = ''; }, 3000); } });
   wire('btn-save-default', () => { try { window[LS_KEY].setItem('budgetforge-custom-default', JSON.stringify(DATA)); const status = document.getElementById('save-status'); if (status) { status.textContent = 'Saved as your default!'; status.classList.remove('error'); setTimeout(() => { status.textContent = ''; }, 3000); } } catch (e) { const status = document.getElementById('save-status'); if (status) { status.textContent = 'Could not save default'; status.classList.add('error'); } } });
   wire('btn-clear-default', () => { try { window[LS_KEY].removeItem('budgetforge-custom-default'); } catch(e) {} const status = document.getElementById('save-status'); if (status) { status.textContent = 'Cleared — reset will use empty defaults'; status.classList.remove('error'); setTimeout(() => { status.textContent = ''; }, 3000); } });
+  wire('btn-set-pin', async () => {
+    const v1 = document.getElementById('inp-pin-new').value;
+    const v2 = document.getElementById('inp-pin-confirm').value;
+    const status = document.getElementById('pin-status');
+    if (!v1 || v1.length < 4) { if (status) { status.textContent = 'Use at least 4 characters.'; status.classList.add('error'); } return; }
+    if (v1 !== v2) { if (status) { status.textContent = "PINs don't match."; status.classList.add('error'); } return; }
+    setSavedPinHash(await hashPassword(v1));
+    markUnlockedThisSession();
+    document.getElementById('inp-pin-new').value = '';
+    document.getElementById('inp-pin-confirm').value = '';
+    updateSecuritySection();
+    if (status) { status.textContent = "PIN set — you'll need it next time you open this file."; status.classList.remove('error'); setTimeout(() => { status.textContent = ''; }, 4000); }
+  });
+  wire('btn-remove-pin', () => {
+    if (!confirm('Remove PIN protection? Anyone opening this file will be able to see your budget.')) return;
+    removeSavedPinHash();
+    clearUnlockedThisSession();
+    updateSecuritySection();
+    const status = document.getElementById('pin-status');
+    if (status) { status.textContent = 'PIN protection removed.'; status.classList.remove('error'); setTimeout(() => { status.textContent = ''; }, 4000); }
+  });
 }
 
 // Sidebar nav (desktop + mobile)
@@ -1794,13 +1869,133 @@ document.getElementById('btn-save').addEventListener('click', saveData);
 document.getElementById('btn-load').addEventListener('click', () => { document.getElementById('file-input').click(); });
 document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files.length > 0) loadDataFromFile(e.target.files[0]); e.target.value = ''; });
 
+// ===== Lock Screen (local PIN — not a real account, just a privacy screen) =====
+const PIN_KEY = 'budgetforge-pin-hash';
+const UNLOCK_SESSION_KEY = 'budgetforge-unlocked';
+
+async function hashPassword(text) {
+  const salted = 'bf-salt-' + text;
+  try {
+    if (window.crypto && window.crypto.subtle) {
+      const enc = new TextEncoder().encode(salted);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  let h = 0;
+  for (let i = 0; i < salted.length; i++) { h = ((h << 5) - h + salted.charCodeAt(i)) | 0; }
+  return 'fb' + Math.abs(h).toString(16);
+}
+
+function getSavedPinHash() { if (!storageOk) return null; try { return window[LS_KEY].getItem(PIN_KEY); } catch (e) { return null; } }
+function setSavedPinHash(hash) { if (!storageOk) return; try { window[LS_KEY].setItem(PIN_KEY, hash); } catch (e) {} }
+function removeSavedPinHash() { if (!storageOk) return; try { window[LS_KEY].removeItem(PIN_KEY); } catch (e) {} }
+function isUnlockedThisSession() { try { return sessionStorage.getItem(UNLOCK_SESSION_KEY) === '1'; } catch (e) { return false; } }
+function markUnlockedThisSession() { try { sessionStorage.setItem(UNLOCK_SESSION_KEY, '1'); } catch (e) {} }
+function clearUnlockedThisSession() { try { sessionStorage.removeItem(UNLOCK_SESSION_KEY); } catch (e) {} }
+
+let lockMode = 'unlock';
+function shakeLockBox() { const box = document.querySelector('.lock-box'); if (!box) return; box.classList.remove('lock-shake'); void box.offsetWidth; box.classList.add('lock-shake'); }
+
+function setLockMode(mode) {
+  lockMode = mode;
+  const title = document.getElementById('lock-title');
+  const subtitle = document.getElementById('lock-subtitle');
+  const pin2 = document.getElementById('lock-pin-2');
+  const submit = document.getElementById('lock-submit');
+  const forgot = document.getElementById('lock-forgot');
+  const err = document.getElementById('lock-error');
+  if (err) err.textContent = '';
+  if (mode === 'setup') {
+    if (title) title.textContent = 'Protect Your Budget';
+    if (subtitle) subtitle.textContent = 'Set a PIN so only you can open this';
+    if (pin2) pin2.style.display = '';
+    if (submit) submit.textContent = 'Set PIN';
+    if (forgot) forgot.style.display = 'none';
+  } else {
+    if (title) title.textContent = 'BudgetForge';
+    if (subtitle) subtitle.textContent = 'Enter your PIN';
+    if (pin2) pin2.style.display = 'none';
+    if (submit) submit.textContent = 'Unlock';
+    if (forgot) forgot.style.display = '';
+  }
+  const pin1 = document.getElementById('lock-pin-1');
+  if (pin1) { pin1.value = ''; setTimeout(() => pin1.focus(), 50); }
+  if (pin2) pin2.value = '';
+}
+
+function updateSecuritySection() {
+  const status = document.getElementById('security-status');
+  const removeBtn = document.getElementById('btn-remove-pin');
+  const lockNowBtn = document.getElementById('lock-now-toggle');
+  const hasPin = !!getSavedPinHash();
+  if (status) status.textContent = hasPin ? 'PIN protection is on for this device.' : 'No PIN set — anyone opening this file can see your budget.';
+  if (removeBtn) removeBtn.style.display = hasPin ? '' : 'none';
+  if (lockNowBtn) lockNowBtn.style.display = hasPin ? '' : 'none';
+}
+
+function initLock() {
+  const lockScreen = document.getElementById('lock-screen');
+  if (!lockScreen) return;
+  const securitySection = document.getElementById('security-section');
+  if (!storageOk) {
+    if (securitySection) securitySection.style.display = 'none';
+    lockScreen.classList.remove('open');
+    return;
+  }
+  updateSecuritySection();
+  const savedHash = getSavedPinHash();
+  if (!savedHash || isUnlockedThisSession()) { lockScreen.classList.remove('open'); return; }
+  lockScreen.classList.add('open');
+  setLockMode('unlock');
+}
+
+document.getElementById('lock-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pin1 = document.getElementById('lock-pin-1');
+  const pin2 = document.getElementById('lock-pin-2');
+  const err = document.getElementById('lock-error');
+  const v1 = pin1 ? pin1.value : '';
+  if (lockMode === 'setup') {
+    const v2 = pin2 ? pin2.value : '';
+    if (v1.length < 4) { if (err) err.textContent = 'Use at least 4 characters.'; shakeLockBox(); return; }
+    if (v1 !== v2) { if (err) err.textContent = "PINs don't match."; shakeLockBox(); return; }
+    setSavedPinHash(await hashPassword(v1));
+    markUnlockedThisSession();
+    document.getElementById('lock-screen').classList.remove('open');
+    updateSecuritySection();
+    return;
+  }
+  if (!v1) { if (err) err.textContent = 'Enter your PIN.'; return; }
+  const hash = await hashPassword(v1);
+  if (hash === getSavedPinHash()) {
+    markUnlockedThisSession();
+    document.getElementById('lock-screen').classList.remove('open');
+  } else {
+    if (err) err.textContent = 'Incorrect PIN.';
+    shakeLockBox();
+    if (pin1) { pin1.value = ''; pin1.focus(); }
+  }
+});
+
+document.getElementById('lock-forgot').addEventListener('click', () => {
+  if (!confirm("Reset your PIN? This removes PIN protection (your budget numbers aren't affected). Since there's no server, anyone with this file could do this too — it only stops casual snooping.")) return;
+  removeSavedPinHash();
+  clearUnlockedThisSession();
+  document.getElementById('lock-screen').classList.remove('open');
+  updateSecuritySection();
+});
+
+document.getElementById('lock-now-toggle').addEventListener('click', () => {
+  if (!getSavedPinHash()) return;
+  clearUnlockedThisSession();
+  document.getElementById('lock-screen').classList.add('open');
+  setLockMode('unlock');
+});
+
 // Init
 populateThemeSelect();
 applyTheme(currentTheme);
-// Check if browser storage is available (blocked in preview iframes)
-const LS_KEY = 'loc' + 'alSt' + 'orage';
-let storageOk = false;
-try { window[LS_KEY].setItem('_test', '1'); window[LS_KEY].removeItem('_test'); storageOk = true; } catch (e) {}
 if (storageOk) {
   document.getElementById('btn-save-default').style.display = '';
   document.getElementById('btn-clear-default').style.display = '';
@@ -1813,6 +2008,7 @@ if (storageOk) {
   document.getElementById('btn-save-default').style.display = 'none';
   document.getElementById('btn-clear-default').style.display = 'none';
 }
+initLock();
 setupPersistentButtons();
 buildEditPanel();
 render();
