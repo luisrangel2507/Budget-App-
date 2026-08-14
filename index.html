@@ -184,11 +184,11 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .main-content { padding: var(--space-6); }
 
 /* ===== Summary Cards ===== */
-.dashboard-banner { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 320px; border: 1px solid var(--border); }
+.dashboard-banner { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 420px; border: 1px solid var(--border); }
 .dashboard-banner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dashboard-banner-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(10,10,20,0.6) 100%); display: flex; align-items: flex-end; padding: var(--space-5); }
 .dashboard-banner-text { color: #fff; font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); transition: opacity 0.4s ease; }
-@media (max-width: 640px) { .dashboard-banner { height: 220px; } .dashboard-banner-text { font-size: var(--text-base); } }
+@media (max-width: 640px) { .dashboard-banner { height: 280px; } .dashboard-banner-text { font-size: var(--text-base); } }
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
 @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
 .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); backdrop-filter: blur(10px); position: relative; overflow: hidden; transition: all var(--transition); }
@@ -553,6 +553,26 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .whatif-stat { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; }
 .whatif-stat .ws-label { display: block; font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: var(--space-1); }
 .whatif-stat .ws-val { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; }
+
+/* ===== Spending Log (transaction tracker) ===== */
+.txn-form { display: grid; grid-template-columns: 150px 110px 150px 1fr auto; gap: var(--space-2); margin-bottom: var(--space-4); align-items: center; }
+.txn-form .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); margin: 0; }
+.txn-add-btn { margin-top: 0; white-space: nowrap; }
+@media (max-width: 900px) { .txn-form { grid-template-columns: 1fr 1fr; } .txn-add-btn { grid-column: 1 / -1; } }
+.txn-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-2); }
+.txn-stat { background: var(--surface-offset); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; }
+.ts-label { display: block; font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+.ts-val { font-family: var(--font-display); font-size: var(--text-base); font-weight: 700; }
+@media (max-width: 640px) { .txn-stats { grid-template-columns: 1fr; } }
+.txn-chart-wrap { position: relative; height: 220px; }
+.txn-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-2); }
+.txn-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--surface-offset); border-radius: var(--radius-md); font-size: var(--text-xs); }
+.txn-item .txn-meta { display: flex; flex-direction: column; min-width: 0; }
+.txn-item .txn-cat { font-weight: 600; }
+.txn-item .txn-date-note { color: var(--text-muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.txn-item .txn-right { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.txn-item .txn-amt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.txn-remove { position: static; }
 
 /* Edit panel: selects */
 .edit-field select { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); font-size: var(--text-sm); font-family: var(--font-body); width: 100%; }
@@ -1009,6 +1029,39 @@ p, li { text-wrap: pretty; max-width: 72ch; }
           <div class="leg"><span class="swatch" style="background: var(--crimson);"></span> Due soon (within 5 days)</div>
         </div>
       </div>
+
+      <!-- Spending Log -->
+      <div class="card mt-6">
+        <div class="card-title">Spending Log — Track Every Purchase</div>
+        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Log real purchases as they happen to see actual spending vs. your budget. This feeds your Financial Health and Monthly Trend automatically.</p>
+        <form id="txn-form" class="txn-form">
+          <input type="date" id="txn-date" class="lock-input auth-left" required>
+          <input type="number" id="txn-amount" class="lock-input auth-left" placeholder="Amount" min="0" step="0.01" required>
+          <select id="txn-category" class="lock-input auth-left">
+            <option value="Groceries">Groceries</option>
+            <option value="Dining">Dining</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Bills">Bills</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="txn-note" class="lock-input auth-left" placeholder="Note (optional)">
+          <button type="submit" class="btn btn-add txn-add-btn">+ Add</button>
+        </form>
+
+        <div class="txn-stats">
+          <div class="txn-stat"><span class="ts-label">Spent This Month</span><span class="ts-val text-expense" id="txn-spent-month">$0</span></div>
+          <div class="txn-stat"><span class="ts-label">Fixed Budget</span><span class="ts-val" id="txn-budget-month">$0</span></div>
+          <div class="txn-stat"><span class="ts-label">vs. Budget</span><span class="ts-val" id="txn-vs-budget">—</span></div>
+        </div>
+
+        <div class="grid-2 mt-4">
+          <div><div class="txn-chart-wrap"><canvas id="txnCategoryChart"></canvas></div></div>
+          <div class="txn-list" id="txn-list"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Debt Tab -->
@@ -1404,7 +1457,8 @@ const DEFAULTS = {
   debts: [],
   roommateRent: 0, rentP1: 0, rentP2: 0,
   savingsGoals: [],
-  assets: []
+  assets: [],
+  transactions: []
 };
 let DATA = JSON.parse(JSON.stringify(DEFAULTS));
 DATA.debtPaymentMode = 'snowball'; // 'snowball' or 'minimum'
@@ -1560,7 +1614,7 @@ function render() {
   document.getElementById('page-subtitle').textContent = `${roommateNote}Thank you for showing up today — let's keep moving toward your goals, together.`;
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
-  renderNetWorth(); renderSavingsGoals(); renderBillCalendar();
+  renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderTransactions();
   updatePlan(currentPlan); renderCharts(); renderTrend();
   persistUserData();
 }
@@ -1851,6 +1905,90 @@ function renderBillCalendar() {
     </div>`;
   }).join('');
 }
+
+// ===== Spending Log (real transactions vs. fixed budget) =====
+const TXN_CATEGORY_COLORS = { Groceries: '#10b981', Dining: '#f97316', Transport: '#0ea5e9', Shopping: '#8b5cf6', Entertainment: '#f43f5e', Bills: '#f59e0b', Health: '#14b8a6', Other: '#6b7280' };
+let txnCategoryChartInstance = null;
+
+function currentMonthKey() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+
+function renderTransactions() {
+  const listEl = document.getElementById('txn-list');
+  if (!listEl) return;
+  if (!DATA.transactions) DATA.transactions = [];
+  const dateInput = document.getElementById('txn-date');
+  if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+
+  const key = currentMonthKey();
+  const monthTxns = DATA.transactions.filter((t) => (t.date || '').slice(0, 7) === key);
+  const spent = monthTxns.reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const budget = finances ? finances.baseExpenses : 0;
+  const diff = budget - spent;
+
+  const spentEl = document.getElementById('txn-spent-month'); if (spentEl) spentEl.textContent = fmtShort(spent);
+  const budgetEl = document.getElementById('txn-budget-month'); if (budgetEl) budgetEl.textContent = fmtShort(budget);
+  const vsEl = document.getElementById('txn-vs-budget');
+  if (vsEl) {
+    vsEl.textContent = diff >= 0 ? `${fmtShort(diff)} left` : `${fmtShort(Math.abs(diff))} over`;
+    vsEl.className = 'ts-val ' + (diff >= 0 ? 'text-income' : 'text-expense');
+  }
+
+  const sorted = DATA.transactions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id - a.id);
+  if (sorted.length === 0) {
+    listEl.innerHTML = '<p style="font-size: var(--text-xs); color: var(--text-muted);">No purchases logged yet. Add one on the left.</p>';
+  } else {
+    listEl.innerHTML = sorted.map((t) => `<div class="txn-item">
+      <div class="txn-meta">
+        <span class="txn-cat" style="color: ${TXN_CATEGORY_COLORS[t.category] || 'var(--text)'};">${t.category}</span>
+        <span class="txn-date-note">${t.date}${t.note ? ' · ' + t.note : ''}</span>
+      </div>
+      <div class="txn-right">
+        <span class="txn-amt">${fmtShort(parseFloat(t.amount) || 0)}</span>
+        <button type="button" class="btn-remove txn-remove" data-id="${t.id}" title="Remove">✕</button>
+      </div>
+    </div>`).join('');
+    listEl.querySelectorAll('.txn-remove').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = parseFloat(btn.dataset.id);
+        DATA.transactions = DATA.transactions.filter((t) => t.id !== id);
+        render();
+      });
+    });
+  }
+
+  renderTxnCategoryChart(monthTxns);
+}
+
+function renderTxnCategoryChart(monthTxns) {
+  const ctx = document.getElementById('txnCategoryChart');
+  if (!ctx) return;
+  if (txnCategoryChartInstance) txnCategoryChartInstance.destroy();
+  const byCategory = {};
+  monthTxns.forEach((t) => { byCategory[t.category] = (byCategory[t.category] || 0) + (parseFloat(t.amount) || 0); });
+  const labels = Object.keys(byCategory);
+  if (labels.length === 0) return;
+  const c = chartColors();
+  txnCategoryChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: labels.map((l) => byCategory[l]), backgroundColor: labels.map((l) => TXN_CATEGORY_COLORS[l] || '#6b7280'), borderColor: c.bg, borderWidth: 2, hoverOffset: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: c.text, font: { size: 10, family: 'Inter, sans-serif' }, padding: 8, boxWidth: 10 } }, tooltip: { callbacks: { label: (ctx2) => `${ctx2.label}: $${ctx2.raw.toLocaleString()}` } } } }
+  });
+}
+
+document.getElementById('txn-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const dateEl = document.getElementById('txn-date');
+  const amountEl = document.getElementById('txn-amount');
+  const categoryEl = document.getElementById('txn-category');
+  const noteEl = document.getElementById('txn-note');
+  const amount = parseFloat(amountEl.value);
+  if (!dateEl.value || !amount || amount <= 0) return;
+  if (!DATA.transactions) DATA.transactions = [];
+  DATA.transactions.push({ id: Date.now(), date: dateEl.value, amount, category: categoryEl.value, note: noteEl.value.trim() });
+  amountEl.value = '';
+  noteEl.value = '';
+  render();
+});
 
 // ===== 50/30/20 Rule =====
 function render503020() {
@@ -2282,7 +2420,7 @@ function renderTrend() {
 
 // Save / Load via file download/upload
 function saveData() {
-  const toSave = { biweekly: DATA.biweekly, expenses: DATA.expenses, debts: DATA.debts, roommateRent: DATA.roommateRent, rentP1: DATA.rentP1, rentP2: DATA.rentP2, debtPaymentMode: DATA.debtPaymentMode, savingsGoals: DATA.savingsGoals, assets: DATA.assets, startingDebt: DATA.startingDebt, theme: currentTheme, appVersion: 2 };
+  const toSave = { biweekly: DATA.biweekly, expenses: DATA.expenses, debts: DATA.debts, roommateRent: DATA.roommateRent, rentP1: DATA.rentP1, rentP2: DATA.rentP2, debtPaymentMode: DATA.debtPaymentMode, savingsGoals: DATA.savingsGoals, assets: DATA.assets, transactions: DATA.transactions, startingDebt: DATA.startingDebt, theme: currentTheme, appVersion: 2 };
   const blob = new Blob([JSON.stringify(toSave, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2310,6 +2448,7 @@ function loadDataFromFile(file) {
       if (saved.debtPaymentMode) DATA.debtPaymentMode = saved.debtPaymentMode;
       if (saved.savingsGoals) DATA.savingsGoals = saved.savingsGoals;
       if (saved.assets) DATA.assets = saved.assets;
+      if (saved.transactions) DATA.transactions = saved.transactions;
       if (saved.startingDebt !== undefined) DATA.startingDebt = saved.startingDebt;
       if (saved.theme && THEMES[saved.theme]) applyTheme(saved.theme);
       buildEditPanel();
