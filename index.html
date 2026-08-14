@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="travel">
+<html lang="en" data-theme="earth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,35 +63,35 @@
   --sidebar-w: 240px;
 }
 :root {
-  --bg: #f5f8fc;
-  --surface: rgba(255,255,255,0.94);
-  --surface-2: rgba(255,255,255,0.98);
-  --surface-offset: rgba(226,236,246,0.6);
-  --border: rgba(15,23,42,0.10);
-  --border-glow: rgba(2,132,199,0.35);
-  --divider: rgba(15,23,42,0.07);
-  --text: #172033;
-  --text-muted: #5b6b82;
-  --text-faint: #93a2b8;
-  --gold: #f59e0b;
-  --neon: #10b981;
-  --neon-bg: rgba(16,185,129,0.09);
-  --crimson: #f43f5e;
-  --crimson-bg: rgba(244,63,94,0.09);
-  --cyan: #0ea5e9;
-  --cyan-bg: rgba(14,165,233,0.09);
-  --amber: #f97316;
-  --amber-bg: rgba(249,115,22,0.09);
-  --savings: #8b5cf6;
-  --savings-bg: rgba(139,92,246,0.09);
+  --bg: #f5f0eb;
+  --surface: rgba(255,250,244,0.95);
+  --surface-2: rgba(248,240,230,0.95);
+  --surface-offset: rgba(238,228,215,0.7);
+  --border: rgba(160,120,80,0.18);
+  --border-glow: rgba(180,90,50,0.3);
+  --divider: rgba(160,120,80,0.1);
+  --text: #3d2f24;
+  --text-muted: #8a7560;
+  --text-faint: #b5a890;
+  --gold: #c47d4a;
+  --neon: #7a9e5e;
+  --neon-bg: rgba(122,158,94,0.1);
+  --crimson: #c75450;
+  --crimson-bg: rgba(199,84,80,0.1);
+  --cyan: #8a6a8a;
+  --cyan-bg: rgba(138,106,138,0.1);
+  --amber: #c47d4a;
+  --amber-bg: rgba(196,125,74,0.1);
+  --savings: #8a7a4a;
+  --savings-bg: rgba(138,122,74,0.1);
   --income: var(--neon); --income-bg: var(--neon-bg);
   --expense: var(--crimson); --expense-bg: var(--crimson-bg);
   --debt: var(--amber); --debt-bg: var(--amber-bg);
   --info: var(--cyan); --info-bg: var(--cyan-bg);
-  --heading: #0284c7;
-  --shadow-sm: 0 2px 8px rgba(15,23,42,0.06);
-  --shadow-md: 0 4px 20px rgba(15,23,42,0.08);
-  --font-display: 'Poppins', 'Inter', sans-serif;
+  --heading: #5a3e2b;
+  --shadow-sm: 0 2px 8px rgba(90,62,43,0.06);
+  --shadow-md: 0 4px 20px rgba(90,62,43,0.08);
+  --font-display: 'DM Sans', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
   --starfield-opacity: 0;
 }
@@ -676,6 +676,28 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 [data-theme="travel"] .step-badge { box-shadow: none; }
 [data-theme="travel"] .countdown-card::after { display: none; }
 [data-theme="travel"] .main-header { background: rgba(255,255,255,0.85); }
+
+/* ===== Warm Earth — same flat, modern treatment as Travel ===== */
+[data-theme="earth"] * { text-shadow: none !important; filter: none !important; }
+[data-theme="earth"] h1, [data-theme="earth"] h2, [data-theme="earth"] h3, [data-theme="earth"] h4 { text-transform: none; letter-spacing: 0.01em; }
+[data-theme="earth"] .nav-item { text-transform: none; letter-spacing: 0.01em; font-weight: 600; border-radius: var(--radius-full); }
+[data-theme="earth"] .nav-item.active { background: var(--info-bg); border-color: rgba(138,106,138,0.18); }
+[data-theme="earth"] .sidebar { border-right: 1px solid var(--border); }
+[data-theme="earth"] .sidebar-header { background: linear-gradient(135deg, rgba(196,125,74,0.1), rgba(122,158,94,0.05)); }
+[data-theme="earth"] .summary-card, [data-theme="earth"] .plan-panel, [data-theme="earth"] .card,
+[data-theme="earth"] .paycheck-card, [data-theme="earth"] .debt-card, [data-theme="earth"] .networth-card,
+[data-theme="earth"] .countdown-card, [data-theme="earth"] .goal-card, [data-theme="earth"] .bill-cal-day,
+[data-theme="earth"] .rule-cell, [data-theme="earth"] .modal, [data-theme="earth"] .edit-panel {
+  box-shadow: 0 2px 14px rgba(90,62,43,0.07);
+}
+[data-theme="earth"] .summary-card:hover, [data-theme="earth"] .plan-panel:hover { box-shadow: 0 8px 24px rgba(90,62,43,0.1); }
+[data-theme="earth"] .plan-panel.selected { box-shadow: 0 8px 24px rgba(90,62,43,0.11); }
+[data-theme="earth"] .btn, [data-theme="earth"] .plan-select-btn, [data-theme="earth"] .action-btn { border-radius: var(--radius-full); }
+[data-theme="earth"] .btn { text-transform: none; letter-spacing: 0.01em; font-weight: 600; font-size: var(--text-xs); }
+[data-theme="earth"] .badge, [data-theme="earth"] .goal-badge, [data-theme="earth"] .debt-mode-badge { text-transform: none; letter-spacing: 0.01em; }
+[data-theme="earth"] .step-badge { box-shadow: none; }
+[data-theme="earth"] .countdown-card::after { display: none; }
+[data-theme="earth"] .main-header { background: rgba(255,250,244,0.85); }
 </style>
 </head>
 <body>
@@ -1565,6 +1587,7 @@ const THEMES = {
       '--debt': '#c47d4a', '--debt-bg': 'rgba(196,125,74,0.1)',
       '--info': '#8a6a8a', '--info-bg': 'rgba(138,106,138,0.1)',
       '--heading': '#5a3e2b',
+      '--radius-sm': '0.5rem', '--radius-md': '0.75rem', '--radius-lg': '1.25rem',
       '--font-display': "'DM Sans', 'Inter', sans-serif",
       '--font-body': "'Inter', sans-serif",
       '--starfield-opacity': '0'
@@ -1572,7 +1595,7 @@ const THEMES = {
   }
 };
 
-let currentTheme = 'travel';
+let currentTheme = 'earth';
 
 function applyTheme(themeKey) {
   const theme = THEMES[themeKey];
