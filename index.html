@@ -756,8 +756,8 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 <div class="main">
   <div class="main-header">
     <div>
-      <h1 id="page-title">Welcome Back</h1>
-      <div class="header-sub" id="page-subtitle">Take control of your budget. Choose your path.</div>
+      <h1 id="page-title">Welcome back!</h1>
+      <div class="header-sub" id="page-subtitle">Thank you for showing up today — let's keep moving toward your goals, together.</div>
     </div>
     <div class="total-credits">
       <div class="lbl">Total Available</div>
@@ -1451,7 +1451,9 @@ function render() {
 
   const splitCount = DATA.expenses.filter(e => e.split).length;
   const roommateNote = DATA.roommateRent > 0 ? `Roommate pays ${fmtShort(DATA.roommateRent)} toward rent${splitCount > 0 ? ` and splits ${splitCount} ${splitCount === 1 ? 'utility' : 'utilities'}` : ''}. ` : '';
-  document.getElementById('page-subtitle').textContent = `${roommateNote}Choose your path.`;
+  const firstName = (DATA.userName || '').trim().split(' ')[0];
+  document.getElementById('page-title').textContent = firstName ? `Welcome back, ${firstName}!` : 'Welcome back!';
+  document.getElementById('page-subtitle').textContent = `${roommateNote}Thank you for showing up today — let's keep moving toward your goals, together.`;
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
   renderNetWorth(); renderSavingsGoals(); renderBillCalendar();
