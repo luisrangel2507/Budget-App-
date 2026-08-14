@@ -473,6 +473,8 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .onboarding-row-top { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-2); align-items: center; }
 .onboarding-row-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .onboarding-row-card .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); margin: 0; }
+.ob-field-label { display: block; font-family: var(--font-display); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+.onboarding-row-top .ob-row-remove, .onboarding-row .ob-row-remove { position: static; }
 .onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
 .onboarding-actions .btn { flex: 1; padding: var(--space-3); }
 .sidebar-account { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -3049,8 +3051,8 @@ function renderObExpenseRows() {
       <button type="button" class="btn-remove ob-row-remove" data-idx="${i}">✕</button>
     </div>
     <div class="onboarding-row-bottom">
-      <input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="amount" placeholder="Amount $" min="0" value="${e.amount || ''}">
-      <input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="dueDay" placeholder="Due day" min="1" max="31" value="${e.dueDay || ''}">
+      <div class="ob-field"><label class="ob-field-label">Amount</label><input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="amount" placeholder="$" min="0" value="${e.amount || ''}"></div>
+      <div class="ob-field"><label class="ob-field-label">Due day of month</label><input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="dueDay" placeholder="e.g. 1" min="1" max="31" value="${e.dueDay || ''}"></div>
     </div>
   </div>`).join('');
   wireObRows(wrap, obExpenses, renderObExpenseRows);
