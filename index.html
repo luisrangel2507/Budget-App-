@@ -1000,12 +1000,11 @@ p, li { text-wrap: pretty; max-width: 72ch; }
   <div class="main-header">
     <div>
       <h1 id="page-title">Welcome back!</h1>
-      <div class="header-sub" id="page-subtitle">Thank you for showing up today — let's keep moving toward your goals, together.</div>
+      <div class="header-sub" id="page-subtitle">It's always worth it to work towards your goals.</div>
     </div>
     <div class="total-credits">
       <div class="lbl">Total Available</div>
       <div class="val" id="total-credits-val">$1,155.50</div>
-      <div class="delta" id="total-credits-delta">+$1,155.50 this month</div>
     </div>
   </div>
 
@@ -1775,8 +1774,6 @@ function render() {
   document.getElementById('sum-cashflow-sub').innerHTML = finances.surplus2 >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
   document.getElementById('total-credits-val').textContent = fmtShort(finances.surplus2);
   document.getElementById('total-credits-val').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
-  document.getElementById('total-credits-delta').textContent = (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2) + ' this month';
-  document.getElementById('total-credits-delta').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
 
   const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
   document.getElementById('health-pct').textContent = healthPct + '%';
@@ -1809,7 +1806,7 @@ function render() {
   const roommateNote = DATA.roommateRent > 0 ? `Roommate pays ${fmtShort(DATA.roommateRent)} toward rent${splitCount > 0 ? ` and splits ${splitCount} ${splitCount === 1 ? 'utility' : 'utilities'}` : ''}. ` : '';
   const firstName = (DATA.userName || '').trim().split(' ')[0];
   document.getElementById('page-title').textContent = firstName ? `Welcome back, ${firstName}!` : 'Welcome back!';
-  document.getElementById('page-subtitle').textContent = `${roommateNote}Thank you for showing up today — let's keep moving toward your goals, together.`;
+  document.getElementById('page-subtitle').textContent = `${roommateNote}It's always worth it to work towards your goals.`;
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
   renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderSubscriptions(); renderTransactions(); renderRecentActivity();
@@ -1876,8 +1873,6 @@ function updatePlan(planKey) {
   document.getElementById('sum-cashflow-sub').innerHTML = finances.surplus2 >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
   document.getElementById('total-credits-val').textContent = fmtShort(finances.surplus2);
   document.getElementById('total-credits-val').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
-  document.getElementById('total-credits-delta').textContent = (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2) + ' this month';
-  document.getElementById('total-credits-delta').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
   renderExpenseTable(); renderBudgetPlanRows(); renderQuickRef(); renderExpenseChart();
 
   const p = finances.plans[planKey]; const pd = plansData[planKey];
