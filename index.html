@@ -1761,19 +1761,32 @@ function generatePlanData(finances) {
 
 let currentPlan = 'balanced'; let finances = null; let plansData = null;
 
+// Logged income/expense transactions dated this month, added on top of the
+// fixed recurring budget so headline totals reflect what was actually logged.
+function getMonthTxnTotals() {
+  const key = currentMonthKey();
+  const expense = (DATA.transactions || []).filter((t) => (t.date || '').slice(0, 7) === key).reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+  const income = (DATA.incomes || []).filter((i) => (i.date || '').slice(0, 7) === key).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  return { expense, income };
+}
+
 function render() {
   finances = computeFinances(); plansData = generatePlanData(finances);
-  document.getElementById('sum-income').textContent = fmtShort(finances.income2);
-  document.getElementById('sum-income-sub').textContent = `Bi-weekly ${fmtShort(DATA.biweekly)} × 2`;
-  document.getElementById('sum-expenses').textContent = fmtShort(finances.totalExpenses);
-  document.getElementById('sum-expenses-sub').innerHTML = `Includes ${fmtShort(finances.debtPaymentAmount)} debt repayment <span class="debt-mode-badge ${DATA.debtPaymentMode}">${DATA.debtPaymentMode === 'minimum' ? 'Min' : 'Snowball'}</span><br>Roommate saves ${fmtShort(finances.roommateSavings)}/mo`;
+  const monthTxn = getMonthTxnTotals();
+  const actualIncome = finances.income2 + monthTxn.income;
+  const actualExpenses = finances.totalExpenses + monthTxn.expense;
+  const actualCashflow = actualIncome - actualExpenses;
+  document.getElementById('sum-income').textContent = fmtShort(actualIncome);
+  document.getElementById('sum-income-sub').textContent = `Bi-weekly ${fmtShort(DATA.biweekly)} × 2${monthTxn.income > 0 ? ` + ${fmtShort(monthTxn.income)} logged` : ''}`;
+  document.getElementById('sum-expenses').textContent = fmtShort(actualExpenses);
+  document.getElementById('sum-expenses-sub').innerHTML = `Includes ${fmtShort(finances.debtPaymentAmount)} debt repayment <span class="debt-mode-badge ${DATA.debtPaymentMode}">${DATA.debtPaymentMode === 'minimum' ? 'Min' : 'Snowball'}</span>${monthTxn.expense > 0 ? `<br>+ ${fmtShort(monthTxn.expense)} logged this month` : `<br>Roommate saves ${fmtShort(finances.roommateSavings)}/mo`}`;
   document.getElementById('sum-debt').textContent = fmtShort(finances.totalDebt);
   document.getElementById('sum-debt-sub').textContent = `${DATA.debts.length} credit account${DATA.debts.length !== 1 ? 's' : ''}`;
-  document.getElementById('sum-cashflow').textContent = (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2);
-  document.getElementById('sum-cashflow').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
-  document.getElementById('sum-cashflow-sub').innerHTML = finances.surplus2 >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
-  document.getElementById('total-credits-val').textContent = fmtShort(finances.surplus2);
-  document.getElementById('total-credits-val').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
+  document.getElementById('sum-cashflow').textContent = (actualCashflow >= 0 ? '+' : '') + fmtShort(actualCashflow);
+  document.getElementById('sum-cashflow').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
+  document.getElementById('sum-cashflow-sub').innerHTML = actualCashflow >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
+  document.getElementById('total-credits-val').textContent = fmtShort(actualCashflow);
+  document.getElementById('total-credits-val').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
 
   const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
   document.getElementById('health-pct').textContent = healthPct + '%';
@@ -1867,12 +1880,15 @@ function renderQuickRef() {
 function updatePlan(planKey) {
   currentPlan = planKey;
   finances = computeFinances(); plansData = generatePlanData(finances);
-  document.getElementById('sum-expenses').textContent = fmtShort(finances.totalExpenses);
-  document.getElementById('sum-cashflow').textContent = (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2);
-  document.getElementById('sum-cashflow').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
-  document.getElementById('sum-cashflow-sub').innerHTML = finances.surplus2 >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
-  document.getElementById('total-credits-val').textContent = fmtShort(finances.surplus2);
-  document.getElementById('total-credits-val').style.color = finances.surplus2 >= 0 ? 'var(--income)' : 'var(--expense)';
+  const monthTxn = getMonthTxnTotals();
+  const actualExpenses = finances.totalExpenses + monthTxn.expense;
+  const actualCashflow = finances.income2 + monthTxn.income - actualExpenses;
+  document.getElementById('sum-expenses').textContent = fmtShort(actualExpenses);
+  document.getElementById('sum-cashflow').textContent = (actualCashflow >= 0 ? '+' : '') + fmtShort(actualCashflow);
+  document.getElementById('sum-cashflow').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
+  document.getElementById('sum-cashflow-sub').innerHTML = actualCashflow >= 0 ? '<span class="badge positive">Surplus</span>' : '<span class="badge negative">Deficit</span>';
+  document.getElementById('total-credits-val').textContent = fmtShort(actualCashflow);
+  document.getElementById('total-credits-val').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
   renderExpenseTable(); renderBudgetPlanRows(); renderQuickRef(); renderExpenseChart();
 
   const p = finances.plans[planKey]; const pd = plansData[planKey];
@@ -2610,43 +2626,47 @@ function openStatsPopup() {
   if (!finances) return;
   const totalAssets = (DATA.assets || []).reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
   const netWorth = totalAssets - finances.totalDebt;
-  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
+  const monthTxn = getMonthTxnTotals();
+  const actualIncome = finances.income2 + monthTxn.income;
+  const actualExpenses = finances.totalExpenses + monthTxn.expense;
+  const actualCashflow = actualIncome - actualExpenses;
+  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, actualCashflow * 12))) * 100))) : 100;
   const firstName = (DATA.userName || '').trim().split(' ')[0];
 
   const greetingEl = document.getElementById('stats-popup-greeting');
   if (greetingEl) greetingEl.textContent = firstName ? `Hey ${firstName}, here's where things stand right now.` : "Here's where things stand right now.";
 
   const setStat = (id, text, cls) => { const el = document.getElementById(id); if (el) { el.textContent = text; if (cls) el.className = 'spi-val ' + cls; } };
-  setStat('sp-income', fmtShort(finances.income2));
-  setStat('sp-expenses', fmtShort(finances.totalExpenses));
+  setStat('sp-income', fmtShort(actualIncome));
+  setStat('sp-expenses', fmtShort(actualExpenses));
   setStat('sp-debt', fmtShort(finances.totalDebt));
-  setStat('sp-cashflow', (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2), finances.surplus2 >= 0 ? 'text-income' : 'text-expense');
+  setStat('sp-cashflow', (actualCashflow >= 0 ? '+' : '') + fmtShort(actualCashflow), actualCashflow >= 0 ? 'text-income' : 'text-expense');
   setStat('sp-networth', (netWorth >= 0 ? '+' : '') + fmtShort(netWorth), netWorth >= 0 ? 'text-income' : 'text-expense');
   setStat('sp-health', healthPct + '%', healthPct > 70 ? 'text-income' : healthPct > 40 ? 'text-debt' : 'text-expense');
 
   const highlightEl = document.getElementById('sp-highlight');
   if (highlightEl) {
     if (finances.totalDebt <= 0) {
-      highlightEl.textContent = `You're debt-free! At your current pace, that's ${fmtShort(Math.max(0, finances.surplus2) * 12)} saved a year.`;
+      highlightEl.textContent = `You're debt-free! At your current pace, that's ${fmtShort(Math.max(0, actualCashflow) * 12)} saved a year.`;
     } else {
       const plan = finances.plans[currentPlan] || finances.plans.balanced;
       highlightEl.textContent = plan.debtFreeMonths > 0 ? `Stay on your current plan and you'll be debt-free in ${fmtDebtFreeLong(plan.debtFreeMonths)}.` : `You're on track — keep it up.`;
     }
   }
 
-  renderSnapshotChart(netWorth);
+  renderSnapshotChart(netWorth, actualIncome, actualExpenses);
   document.getElementById('stats-popup-overlay').classList.add('open');
 }
 
 let snapshotChartInstance = null;
-function renderSnapshotChart(netWorth) {
+function renderSnapshotChart(netWorth, actualIncome, actualExpenses) {
   const ctx = document.getElementById('snapshotChart');
   if (!ctx || !finances) return;
   if (snapshotChartInstance) snapshotChartInstance.destroy();
   const c = chartColors();
   const rows = [
-    { label: 'Income', value: finances.income2, color: c.income },
-    { label: 'Expenses', value: finances.totalExpenses, color: c.expense },
+    { label: 'Income', value: actualIncome != null ? actualIncome : finances.income2, color: c.income },
+    { label: 'Expenses', value: actualExpenses != null ? actualExpenses : finances.totalExpenses, color: c.expense },
     { label: 'Debt', value: finances.totalDebt, color: c.debt },
     { label: 'Net Worth', value: netWorth, color: netWorth >= 0 ? c.income : c.expense }
   ];
