@@ -386,6 +386,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .stats-popup-item { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: var(--space-3); }
 .spi-label { font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
 .spi-val { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+.stats-popup-chart-wrap { height: 180px; margin-top: var(--space-4); }
 @media (max-width: 480px) { .stats-popup-grid { grid-template-columns: 1fr; } }
 
 /* Lock screen */
@@ -726,6 +727,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         <div class="stats-popup-item"><div class="spi-label">Net Worth</div><div class="spi-val text-income" id="sp-networth">$0</div></div>
         <div class="stats-popup-item"><div class="spi-label">Health Score</div><div class="spi-val text-income" id="sp-health">0%</div></div>
       </div>
+      <div class="chart-container stats-popup-chart-wrap"><canvas id="snapshotChart"></canvas></div>
       <div class="banner-card" style="margin-top: var(--space-4);">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" style="flex-shrink:0;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         <p id="sp-highlight" style="font-size: var(--text-xs);"></p>
@@ -2330,7 +2332,7 @@ function startBannerRotation() {
   if (!el) return;
   el.textContent = BANNER_MESSAGES[bannerMsgIndex];
   if (bannerInterval) clearInterval(bannerInterval);
-  bannerInterval = setInterval(showNextBannerMessage, 6000);
+  bannerInterval = setInterval(showNextBannerMessage, 3600000);
 }
 
 // Login stats popup — a quick "here's where you stand" snapshot shown right
@@ -2363,8 +2365,33 @@ function openStatsPopup() {
     }
   }
 
+  renderSnapshotChart(netWorth);
   document.getElementById('stats-popup-overlay').classList.add('open');
 }
+
+let snapshotChartInstance = null;
+function renderSnapshotChart(netWorth) {
+  const ctx = document.getElementById('snapshotChart');
+  if (!ctx || !finances) return;
+  if (snapshotChartInstance) snapshotChartInstance.destroy();
+  const c = chartColors();
+  const rows = [
+    { label: 'Income', value: finances.income2, color: c.income },
+    { label: 'Expenses', value: finances.totalExpenses, color: c.expense },
+    { label: 'Debt', value: finances.totalDebt, color: c.debt },
+    { label: 'Net Worth', value: netWorth, color: netWorth >= 0 ? c.income : c.expense }
+  ];
+  snapshotChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: rows.map((r) => r.label), datasets: [{ data: rows.map((r) => r.value), backgroundColor: rows.map((r) => r.color), borderRadius: 6 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx2) => '$' + Math.round(ctx2.raw).toLocaleString() } } },
+      scales: { x: { grid: { color: c.border, drawBorder: false }, ticks: { color: c.text, font: { size: 9 }, callback: (v) => '$' + v.toLocaleString() } }, y: { grid: { display: false }, ticks: { color: c.text, font: { size: 10, weight: '600' } } } }
+    }
+  });
+}
+
 function closeStatsPopup() { const el = document.getElementById('stats-popup-overlay'); if (el) el.classList.remove('open'); }
 document.getElementById('stats-popup-close').addEventListener('click', closeStatsPopup);
 document.getElementById('stats-popup-go').addEventListener('click', closeStatsPopup);
