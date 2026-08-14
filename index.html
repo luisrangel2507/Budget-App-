@@ -375,6 +375,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .modal-body .privacy-note { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); display: flex; align-items: center; gap: var(--space-2); }
 .modal-body .privacy-note svg { flex-shrink: 0; color: var(--info); }
 
+/* Login stats popup */
+.stats-popup-greeting { font-size: var(--text-sm); color: var(--text); margin-bottom: var(--space-4); }
+.stats-popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.stats-popup-item { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: var(--space-3); }
+.spi-label { font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+.spi-val { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
+@media (max-width: 480px) { .stats-popup-grid { grid-template-columns: 1fr; } }
+
 /* Lock screen */
 .lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 500; align-items: center; justify-content: center; padding: var(--space-4); }
 .lock-screen.open { display: flex; }
@@ -663,6 +671,32 @@ p, li { text-wrap: pretty; max-width: 72ch; }
     </form>
     <button class="lock-forgot" id="lock-forgot">Forgot PIN? Reset it</button>
     <p class="lock-note">This is a local privacy screen, not real security — your data never leaves this device, but anyone with the file and dev tools could bypass it.</p>
+  </div>
+</div>
+
+<!-- Login Stats Popup -->
+<div class="modal-overlay" id="stats-popup-overlay">
+  <div class="modal" role="dialog" aria-labelledby="stats-popup-title" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="stats-popup-title">Your Snapshot</h3>
+      <button class="modal-close" id="stats-popup-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="stats-popup-greeting" id="stats-popup-greeting">Here's where things stand right now.</p>
+      <div class="stats-popup-grid">
+        <div class="stats-popup-item"><div class="spi-label">Monthly Income</div><div class="spi-val text-income" id="sp-income">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Monthly Expenses</div><div class="spi-val text-expense" id="sp-expenses">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Total Debt</div><div class="spi-val text-debt" id="sp-debt">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Net Cash Flow</div><div class="spi-val text-income" id="sp-cashflow">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Net Worth</div><div class="spi-val text-income" id="sp-networth">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Health Score</div><div class="spi-val text-income" id="sp-health">0%</div></div>
+      </div>
+      <div class="banner-card" style="margin-top: var(--space-4);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" style="flex-shrink:0;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <p id="sp-highlight" style="font-size: var(--text-xs);"></p>
+      </div>
+      <button class="btn btn-save lock-submit" id="stats-popup-go" style="width:100%; margin-top: var(--space-5);">Let's Go</button>
+    </div>
   </div>
 </div>
 
@@ -2062,7 +2096,44 @@ function closeHowTo() { document.getElementById('howto-overlay').classList.remov
 document.getElementById('howto-toggle').addEventListener('click', openHowTo);
 document.getElementById('howto-close').addEventListener('click', closeHowTo);
 document.getElementById('howto-overlay').addEventListener('click', (e) => { if (e.target.id === 'howto-overlay') closeHowTo(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHowTo(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeHowTo(); closeStatsPopup(); } });
+
+// Login stats popup — a quick "here's where you stand" snapshot shown right
+// after signing in or finishing onboarding.
+function openStatsPopup() {
+  if (!finances) return;
+  const totalAssets = (DATA.assets || []).reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
+  const netWorth = totalAssets - finances.totalDebt;
+  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(100, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
+  const firstName = (DATA.userName || '').trim().split(' ')[0];
+
+  const greetingEl = document.getElementById('stats-popup-greeting');
+  if (greetingEl) greetingEl.textContent = firstName ? `Hey ${firstName}, here's where things stand right now.` : "Here's where things stand right now.";
+
+  const setStat = (id, text, cls) => { const el = document.getElementById(id); if (el) { el.textContent = text; if (cls) el.className = 'spi-val ' + cls; } };
+  setStat('sp-income', fmtShort(finances.income2));
+  setStat('sp-expenses', fmtShort(finances.totalExpenses));
+  setStat('sp-debt', fmtShort(finances.totalDebt));
+  setStat('sp-cashflow', (finances.surplus2 >= 0 ? '+' : '') + fmtShort(finances.surplus2), finances.surplus2 >= 0 ? 'text-income' : 'text-expense');
+  setStat('sp-networth', (netWorth >= 0 ? '+' : '') + fmtShort(netWorth), netWorth >= 0 ? 'text-income' : 'text-expense');
+  setStat('sp-health', healthPct + '%', healthPct > 70 ? 'text-income' : healthPct > 40 ? 'text-debt' : 'text-expense');
+
+  const highlightEl = document.getElementById('sp-highlight');
+  if (highlightEl) {
+    if (finances.totalDebt <= 0) {
+      highlightEl.textContent = `You're debt-free! At your current pace, that's ${fmtShort(Math.max(0, finances.surplus2) * 12)} saved a year.`;
+    } else {
+      const plan = finances.plans[currentPlan] || finances.plans.balanced;
+      highlightEl.textContent = plan.debtFreeMonths > 0 ? `Stay on your current plan and you'll be debt-free in ${fmtDebtFreeLong(plan.debtFreeMonths)}.` : `You're on track — keep it up.`;
+    }
+  }
+
+  document.getElementById('stats-popup-overlay').classList.add('open');
+}
+function closeStatsPopup() { const el = document.getElementById('stats-popup-overlay'); if (el) el.classList.remove('open'); }
+document.getElementById('stats-popup-close').addEventListener('click', closeStatsPopup);
+document.getElementById('stats-popup-go').addEventListener('click', closeStatsPopup);
+document.getElementById('stats-popup-overlay').addEventListener('click', (e) => { if (e.target.id === 'stats-popup-overlay') closeStatsPopup(); });
 
 // Plan panel clicks
 document.querySelectorAll('.plan-panel').forEach(panel => panel.addEventListener('click', () => updatePlan(panel.dataset.plan)));
@@ -2255,6 +2326,7 @@ function onUserSignedIn(user) {
     buildEditPanel();
     render();
     initLock();
+    openStatsPopup();
   } else {
     setupPersistentButtons();
     startOnboarding(user);
@@ -2450,6 +2522,7 @@ function finishOnboarding() {
   buildEditPanel();
   render();
   initLock();
+  openStatsPopup();
 }
 
 function persistUserData() {
