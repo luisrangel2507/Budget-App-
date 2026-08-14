@@ -381,13 +381,17 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .modal-body .privacy-note svg { flex-shrink: 0; color: var(--info); }
 
 /* Login stats popup */
-.stats-popup-greeting { font-size: var(--text-sm); color: var(--text); margin-bottom: var(--space-4); }
-.stats-popup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-.stats-popup-item { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-md); padding: var(--space-3); }
-.spi-label { font-family: var(--font-display); font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
-.spi-val { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; }
-.stats-popup-chart-wrap { height: 180px; margin-top: var(--space-4); }
-@media (max-width: 480px) { .stats-popup-grid { grid-template-columns: 1fr; } }
+.stats-popup-body { padding: var(--space-4); }
+.stats-popup-greeting { font-size: var(--text-xs); color: var(--text); margin-bottom: var(--space-2); }
+.stats-popup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+.stats-popup-item { background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-sm); padding: 6px var(--space-2); }
+.spi-label { font-family: var(--font-display); font-size: 7px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spi-val { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stats-popup-chart-wrap { height: 100px; margin-top: var(--space-2); }
+.stats-popup-banner { margin-top: var(--space-2) !important; padding: var(--space-2) var(--space-3) !important; }
+.stats-popup-banner p { font-size: 10px !important; line-height: 1.3; }
+#stats-popup-go { margin-top: var(--space-3) !important; padding: var(--space-2) !important; }
+@media (max-width: 480px) { .stats-popup-grid { grid-template-columns: repeat(3, 1fr); } }
 
 /* Lock screen */
 .lock-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 500; align-items: center; justify-content: center; padding: var(--space-4); }
@@ -736,22 +740,22 @@ p, li { text-wrap: pretty; max-width: 72ch; }
       <h3 id="stats-popup-title">Your Snapshot</h3>
       <button class="modal-close" id="stats-popup-close" aria-label="Close">&times;</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body stats-popup-body">
       <p class="stats-popup-greeting" id="stats-popup-greeting">Here's where things stand right now.</p>
       <div class="stats-popup-grid">
-        <div class="stats-popup-item"><div class="spi-label">Monthly Income</div><div class="spi-val text-income" id="sp-income">$0</div></div>
-        <div class="stats-popup-item"><div class="spi-label">Monthly Expenses</div><div class="spi-val text-expense" id="sp-expenses">$0</div></div>
-        <div class="stats-popup-item"><div class="spi-label">Total Debt</div><div class="spi-val text-debt" id="sp-debt">$0</div></div>
-        <div class="stats-popup-item"><div class="spi-label">Net Cash Flow</div><div class="spi-val text-income" id="sp-cashflow">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Income</div><div class="spi-val text-income" id="sp-income">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Expenses</div><div class="spi-val text-expense" id="sp-expenses">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Debt</div><div class="spi-val text-debt" id="sp-debt">$0</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Cash Flow</div><div class="spi-val text-income" id="sp-cashflow">$0</div></div>
         <div class="stats-popup-item"><div class="spi-label">Net Worth</div><div class="spi-val text-income" id="sp-networth">$0</div></div>
-        <div class="stats-popup-item"><div class="spi-label">Health Score</div><div class="spi-val text-income" id="sp-health">0%</div></div>
+        <div class="stats-popup-item"><div class="spi-label">Health</div><div class="spi-val text-income" id="sp-health">0%</div></div>
       </div>
       <div class="chart-container stats-popup-chart-wrap"><canvas id="snapshotChart"></canvas></div>
-      <div class="banner-card" style="margin-top: var(--space-4);">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" style="flex-shrink:0;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        <p id="sp-highlight" style="font-size: var(--text-xs);"></p>
+      <div class="banner-card stats-popup-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" style="flex-shrink:0;"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <p id="sp-highlight"></p>
       </div>
-      <button class="btn btn-save lock-submit" id="stats-popup-go" style="width:100%; margin-top: var(--space-5);">Let's Go</button>
+      <button class="btn btn-save lock-submit" id="stats-popup-go" style="width:100%;">Let's Go</button>
     </div>
   </div>
 </div>
