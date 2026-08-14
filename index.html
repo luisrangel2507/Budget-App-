@@ -1121,47 +1121,6 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         </div>
       </div>
 
-      <!-- Plan Panels -->
-      <div class="section-title">Choose Your Financial Path — Click to Switch</div>
-      <div class="plan-panels" id="plan-panels">
-        <div class="plan-panel" data-plan="balanced">
-          <div class="plan-bar"></div>
-          <div class="plan-panel-content">
-            <div class="plan-panel-title">Navigator Path</div>
-            <div class="plan-panel-subtitle">Balanced</div>
-            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-balanced-debt">$817.50</span></div>
-            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-income" id="pp-balanced-sav">$150</span></div>
-            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-balanced-fun">$100</span></div>
-            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-balanced-time">~7 months</span></div>
-            <button class="plan-select-btn" data-plan="balanced">Active Plan</button>
-          </div>
-        </div>
-        <div class="plan-panel" data-plan="max">
-          <div class="plan-bar"></div>
-          <div class="plan-panel-content">
-            <div class="plan-panel-title">Velocity Path</div>
-            <div class="plan-panel-subtitle">Aggressive</div>
-            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-max-debt">$1,055.50</span></div>
-            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-muted">$0</span></div>
-            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-max-fun">$100</span></div>
-            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-max-time">~5 months</span></div>
-            <button class="plan-select-btn" data-plan="max">Select Plan</button>
-          </div>
-        </div>
-        <div class="plan-panel" data-plan="extreme">
-          <div class="plan-bar"></div>
-          <div class="plan-panel-content">
-            <div class="plan-panel-title">Apex Path</div>
-            <div class="plan-panel-subtitle">Extreme</div>
-            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-extreme-debt">$1,105.50</span></div>
-            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-muted">$0</span></div>
-            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-extreme-fun">$50</span></div>
-            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-extreme-time">~4 months</span></div>
-            <button class="plan-select-btn" data-plan="extreme">Select Plan</button>
-          </div>
-        </div>
-      </div>
-
       <div class="banner-card">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--neon)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <p id="banner-text"></p>
@@ -1339,6 +1298,47 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 
     <!-- Recommendations Tab -->
     <div class="tab-section" data-section="recommendations">
+      <!-- Plan Panels -->
+      <div class="section-title">Choose Your Financial Path — Click to Switch</div>
+      <div class="plan-panels" id="plan-panels">
+        <div class="plan-panel" data-plan="balanced">
+          <div class="plan-bar"></div>
+          <div class="plan-panel-content">
+            <div class="plan-panel-title">Navigator Path</div>
+            <div class="plan-panel-subtitle">Balanced</div>
+            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-balanced-debt">$817.50</span></div>
+            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-income" id="pp-balanced-sav">$150</span></div>
+            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-balanced-fun">$100</span></div>
+            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-balanced-time">~7 months</span></div>
+            <button class="plan-select-btn" data-plan="balanced">Active Plan</button>
+          </div>
+        </div>
+        <div class="plan-panel" data-plan="max">
+          <div class="plan-bar"></div>
+          <div class="plan-panel-content">
+            <div class="plan-panel-title">Velocity Path</div>
+            <div class="plan-panel-subtitle">Aggressive</div>
+            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-max-debt">$1,055.50</span></div>
+            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-muted">$0</span></div>
+            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-max-fun">$100</span></div>
+            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-max-time">~5 months</span></div>
+            <button class="plan-select-btn" data-plan="max">Select Plan</button>
+          </div>
+        </div>
+        <div class="plan-panel" data-plan="extreme">
+          <div class="plan-bar"></div>
+          <div class="plan-panel-content">
+            <div class="plan-panel-title">Apex Path</div>
+            <div class="plan-panel-subtitle">Extreme</div>
+            <div class="plan-stat"><span class="stat-label">Monthly Debt</span><span class="stat-val text-debt" id="pp-extreme-debt">$1,105.50</span></div>
+            <div class="plan-stat"><span class="stat-label">Savings</span><span class="stat-val text-muted">$0</span></div>
+            <div class="plan-stat"><span class="stat-label">Entertainment</span><span class="stat-val text-info" id="pp-extreme-fun">$50</span></div>
+            <div class="plan-stat"><span class="stat-label">Debt-Free</span><span class="stat-val text-income" id="pp-extreme-time">~4 months</span></div>
+            <button class="plan-select-btn" data-plan="extreme">Select Plan</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 50/30/20 Rule -->
       <div class="card mb-6">
         <div class="card-title">50/30/20 Rule — Needs, Wants & Savings</div>
