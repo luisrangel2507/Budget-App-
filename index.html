@@ -458,6 +458,13 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .onboarding-step.active { display: block; }
 .onboarding-step .lock-input { margin-bottom: 0; }
 .onboarding-step .lock-input + .lock-input { margin-top: var(--space-3); }
+.ob-choice-group { display: flex; flex-direction: column; gap: var(--space-3); }
+.ob-choice-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface-offset); cursor: pointer; transition: all var(--transition); width: 100%; font-family: inherit; }
+.ob-choice-btn:hover { border-color: var(--border-glow); }
+.ob-choice-btn.active { border-color: var(--neon); background: var(--neon-bg); box-shadow: 0 0 8px var(--neon-bg); }
+.ob-choice-title { font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); color: var(--heading); }
+.ob-choice-btn.active .ob-choice-title { color: var(--neon); }
+.ob-choice-desc { font-size: var(--text-xs); color: var(--text-muted); }
 .onboarding-rows { display: flex; flex-direction: column; gap: var(--space-2); max-height: 240px; overflow-y: auto; }
 .onboarding-row { display: grid; grid-template-columns: 1fr 90px 60px auto; gap: var(--space-2); align-items: center; }
 .onboarding-row .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
@@ -748,8 +755,8 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 <!-- Onboarding Wizard -->
 <div class="lock-screen" id="onboarding-screen">
   <div class="lock-box onboarding-box">
-    <div class="onboarding-progress"><div class="onboarding-progress-fill" id="ob-progress-fill" style="width:20%;"></div></div>
-    <div class="onboarding-step-label" id="ob-step-label">Step 1 of 5</div>
+    <div class="onboarding-progress"><div class="onboarding-progress-fill" id="ob-progress-fill" style="width:16.66%;"></div></div>
+    <div class="onboarding-step-label" id="ob-step-label">Step 1 of 6</div>
 
     <div class="onboarding-step active" data-step="1">
       <div class="lock-title" style="font-size: var(--text-lg);">Welcome to <span class="brand-wordmark"><span class="brand-word-1">Budget</span> <span class="brand-word-2">Agent</span></span></div>
@@ -759,26 +766,41 @@ p, li { text-wrap: pretty; max-width: 72ch; }
     </div>
 
     <div class="onboarding-step" data-step="2">
+      <div class="lock-title" style="font-size: var(--text-lg);">How Do You Earn?</div>
+      <div class="lock-subtitle">This helps us tailor your plan to how your income works.</div>
+      <div class="ob-choice-group" id="ob-employment-group">
+        <button type="button" class="ob-choice-btn" data-value="employee">
+          <span class="ob-choice-title">I'm an Employee</span>
+          <span class="ob-choice-desc">I work for a company and get a regular paycheck</span>
+        </button>
+        <button type="button" class="ob-choice-btn" data-value="business">
+          <span class="ob-choice-title">I Run My Own Business</span>
+          <span class="ob-choice-desc">Self-employed, freelance, or business owner</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="onboarding-step" data-step="3">
       <div class="lock-title" style="font-size: var(--text-lg);">Your Income</div>
       <div class="lock-subtitle">How much do you take home per paycheck?</div>
       <input type="number" id="ob-biweekly" class="lock-input auth-left" placeholder="Bi-weekly take-home pay" min="0" step="1">
     </div>
 
-    <div class="onboarding-step" data-step="3">
+    <div class="onboarding-step" data-step="4">
       <div class="lock-title" style="font-size: var(--text-lg);">Fixed Expenses</div>
       <div class="lock-subtitle">Add your recurring monthly bills. You can edit these anytime later.</div>
       <div class="onboarding-rows" id="ob-expense-rows"></div>
       <button type="button" class="btn btn-add" id="ob-add-expense" style="margin-top: var(--space-2);">+ Add Expense</button>
     </div>
 
-    <div class="onboarding-step" data-step="4">
+    <div class="onboarding-step" data-step="5">
       <div class="lock-title" style="font-size: var(--text-lg);">Your Debts</div>
       <div class="lock-subtitle">Add any credit cards or loans you're paying down. Skip if you're debt-free.</div>
       <div class="onboarding-rows" id="ob-debt-rows"></div>
       <button type="button" class="btn btn-add" id="ob-add-debt" style="margin-top: var(--space-2);">+ Add Debt</button>
     </div>
 
-    <div class="onboarding-step" data-step="5">
+    <div class="onboarding-step" data-step="6">
       <div class="lock-title" style="font-size: var(--text-lg);">You're All Set</div>
       <div class="lock-subtitle" id="ob-summary">Ready to see your dashboard?</div>
     </div>
@@ -1655,7 +1677,8 @@ const DEFAULTS = {
   savingsGoals: [],
   assets: [],
   transactions: [],
-  incomes: []
+  incomes: [],
+  employmentType: ''
 };
 let DATA = JSON.parse(JSON.stringify(DEFAULTS));
 DATA.debtPaymentMode = 'snowball'; // 'snowball' or 'minimum'
@@ -2980,18 +3003,20 @@ document.getElementById('auth-bypass').addEventListener('click', () => {
 
 // ===== Onboarding Wizard (first sign-in only) =====
 let obStep = 1;
-const OB_TOTAL_STEPS = 5;
+const OB_TOTAL_STEPS = 6;
 let obExpenses = [];
 let obDebts = [];
+let obEmploymentType = '';
 
 function startOnboarding(user) {
-  obStep = 1; obExpenses = []; obDebts = [];
+  obStep = 1; obExpenses = []; obDebts = []; obEmploymentType = '';
   const nameInput = document.getElementById('ob-name');
   const usernameInput = document.getElementById('ob-username');
   const biweeklyInput = document.getElementById('ob-biweekly');
   if (nameInput) nameInput.value = (user && user.displayName) || '';
   if (usernameInput) usernameInput.value = '';
   if (biweeklyInput) biweeklyInput.value = '';
+  document.querySelectorAll('#ob-employment-group .ob-choice-btn').forEach((b) => b.classList.remove('active'));
   renderObExpenseRows();
   renderObDebtRows();
   showObStep(1);
@@ -3060,6 +3085,14 @@ function wireObRows(wrap, arr, rerender) {
   });
 }
 
+document.querySelectorAll('#ob-employment-group .ob-choice-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    obEmploymentType = btn.dataset.value;
+    document.querySelectorAll('#ob-employment-group .ob-choice-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    const err = document.getElementById('ob-error'); if (err) err.textContent = '';
+  });
+});
+
 document.getElementById('ob-add-expense').addEventListener('click', () => {
   obExpenses.push({ name: '', label: '', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need', type: 'Other' });
   renderObExpenseRows();
@@ -3077,6 +3110,9 @@ document.getElementById('ob-next').addEventListener('click', () => {
     if (!name) { if (err) err.textContent = 'Enter your name.'; return; }
   }
   if (obStep === 2) {
+    if (!obEmploymentType) { if (err) err.textContent = 'Choose one to continue.'; return; }
+  }
+  if (obStep === 3) {
     const bw = document.getElementById('ob-biweekly').value;
     if (!bw || parseFloat(bw) <= 0) { if (err) err.textContent = 'Enter your take-home pay.'; return; }
   }
@@ -3090,6 +3126,7 @@ function finishOnboarding() {
   DATA.debts = obDebts.filter((d) => d.name).map((d) => ({ name: d.name, amount: d.amount }));
   DATA.userName = document.getElementById('ob-name').value.trim();
   DATA.userUsername = document.getElementById('ob-username').value.trim();
+  DATA.employmentType = obEmploymentType;
   const screen = document.getElementById('onboarding-screen');
   if (screen) screen.classList.remove('open');
   persistUserData();
