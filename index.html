@@ -426,7 +426,7 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 
 /* Auth screen */
 /* Loading screen */
-.loading-screen { display: none; position: fixed; inset: 0; z-index: 650; background: url('/loading-tree.jpg') center/cover no-repeat, var(--bg); align-items: flex-end; justify-content: center; padding: var(--space-4) var(--space-4) 15vh; }
+.loading-screen { display: none; position: fixed; inset: 0; z-index: 650; background: url('/loading-tree.jpg') center/cover no-repeat, var(--bg); align-items: flex-end; justify-content: center; padding: var(--space-4) var(--space-4) 32vh; }
 .loading-screen.open { display: flex; }
 @media (min-width: 900px) {
   .loading-screen { background: url('/desktop-tree.jpg') center/cover no-repeat, var(--bg); align-items: center; padding-bottom: 0; }
@@ -2899,7 +2899,7 @@ function showLoadingScreen(callback, duration) {
   setTimeout(() => {
     el.classList.remove('open');
     callback();
-  }, duration || 1300);
+  }, duration || 3000);
 }
 
 function onUserSignedIn(user) {
