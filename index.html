@@ -184,11 +184,11 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .main-content { padding: var(--space-6); }
 
 /* ===== Summary Cards ===== */
-.dashboard-banner { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 200px; border: 1px solid var(--border); }
+.dashboard-banner { position: relative; border-radius: var(--radius-lg); overflow: hidden; height: 320px; border: 1px solid var(--border); }
 .dashboard-banner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dashboard-banner-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(10,10,20,0.6) 100%); display: flex; align-items: flex-end; padding: var(--space-5); }
 .dashboard-banner-text { color: #fff; font-family: var(--font-display); font-weight: 700; font-size: var(--text-lg); }
-@media (max-width: 640px) { .dashboard-banner { height: 140px; } .dashboard-banner-text { font-size: var(--text-base); } }
+@media (max-width: 640px) { .dashboard-banner { height: 220px; } .dashboard-banner-text { font-size: var(--text-base); } }
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
 @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
 .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); backdrop-filter: blur(10px); position: relative; overflow: hidden; transition: all var(--transition); }
