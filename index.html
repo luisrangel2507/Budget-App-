@@ -618,6 +618,22 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .sub-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-3); background: var(--surface-offset); border-radius: var(--radius-md); font-size: var(--text-xs); }
 .sub-item .sub-name { font-weight: 600; }
 
+/* ===== Quick Add (Home) ===== */
+.quick-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.quick-add-btn { display: flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid; font-family: var(--font-display); font-weight: 700; font-size: var(--text-sm); transition: all var(--transition); }
+.quick-add-income { background: var(--income-bg); border-color: rgba(16,185,129,0.3); color: var(--income); }
+.quick-add-income:hover { background: var(--income); color: #fff; }
+.quick-add-expense { background: var(--expense-bg); border-color: rgba(244,63,94,0.3); color: var(--expense); }
+.quick-add-expense:hover { background: var(--expense); color: #fff; }
+@media (max-width: 480px) { .quick-add-btn { padding: var(--space-3); font-size: var(--text-xs); } }
+
+.activity-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.activity-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--surface-offset); border-radius: var(--radius-md); font-size: var(--text-xs); }
+.activity-item .act-meta { display: flex; flex-direction: column; min-width: 0; }
+.activity-item .act-label { font-weight: 600; }
+.activity-item .act-date { color: var(--text-muted); font-size: 10px; }
+.activity-item .act-amt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+
 /* Edit panel: selects */
 .edit-field select { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); font-size: var(--text-sm); font-family: var(--font-body); width: 100%; }
 .edit-field select:focus { outline: none; border-color: var(--info); box-shadow: 0 0 8px rgba(0,200,255,0.15); }
@@ -766,6 +782,62 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         <p id="sp-highlight"></p>
       </div>
       <button class="btn btn-save lock-submit" id="stats-popup-go" style="width:100%;">Let's Go</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal-overlay" id="income-modal-overlay">
+  <div class="modal" role="dialog" aria-labelledby="income-modal-title" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="income-modal-title">Add Income</h3>
+      <button class="modal-close" id="income-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Log extra income — a bonus, freelance gig, gift, refund — separate from your fixed paycheck. Tracked here, doesn't change your budget math.</p>
+      <form id="income-form">
+        <input type="date" id="inc-date" class="lock-input auth-left" required>
+        <input type="number" id="inc-amount" class="lock-input auth-left" placeholder="Amount" min="0" step="0.01" required style="margin-top: var(--space-3);">
+        <select id="inc-source" class="lock-input auth-left" style="margin-top: var(--space-3);">
+          <option value="Paycheck">Paycheck</option>
+          <option value="Bonus">Bonus</option>
+          <option value="Freelance">Freelance</option>
+          <option value="Gift">Gift</option>
+          <option value="Refund">Refund</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="text" id="inc-note" class="lock-input auth-left" placeholder="Note (optional)" style="margin-top: var(--space-3);">
+        <button type="submit" class="btn btn-save" style="width:100%; margin-top: var(--space-4);">Add Income</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Add Expense Modal (quick add) -->
+<div class="modal-overlay" id="expense-modal-overlay">
+  <div class="modal" role="dialog" aria-labelledby="expense-modal-title" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="expense-modal-title">Add Expense</h3>
+      <button class="modal-close" id="expense-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);">Log a real purchase. Same as the Spending Log in Expense Breakdown — shows up there too.</p>
+      <form id="quick-expense-form">
+        <input type="date" id="qe-date" class="lock-input auth-left" required>
+        <input type="number" id="qe-amount" class="lock-input auth-left" placeholder="Amount" min="0" step="0.01" required style="margin-top: var(--space-3);">
+        <select id="qe-category" class="lock-input auth-left" style="margin-top: var(--space-3);">
+          <option value="Groceries">Groceries</option>
+          <option value="Dining">Dining</option>
+          <option value="Transport">Transport</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Bills">Bills</option>
+          <option value="Health">Health</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="text" id="qe-note" class="lock-input auth-left" placeholder="Note (optional)" style="margin-top: var(--space-3);">
+        <button type="submit" class="btn btn-save" style="width:100%; margin-top: var(--space-4);">Add Expense</button>
+      </form>
     </div>
   </div>
 </div>
@@ -944,6 +1016,22 @@ p, li { text-wrap: pretty; max-width: 72ch; }
           <div class="dashboard-banner-text" id="dashboard-banner-text">Grow your wealth, one decision at a time.</div>
         </div>
       </div>
+      <div class="quick-add-row mb-6">
+        <button type="button" class="quick-add-btn quick-add-income" id="qa-open-income">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Income
+        </button>
+        <button type="button" class="quick-add-btn quick-add-expense" id="qa-open-expense">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Expense
+        </button>
+      </div>
+
+      <div class="card mb-6" id="recent-activity-card">
+        <div class="card-title">Recent Activity</div>
+        <div class="activity-list" id="activity-list"></div>
+      </div>
+
       <div class="summary-grid">
         <div class="summary-card income"><div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="label">Monthly Income</div><div class="value font-mono" id="sum-income">$3,958</div><div class="sub" id="sum-income-sub">Bi-weekly $1,979 × 2</div></div>
         <div class="summary-card expense"><div class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12H4M14 6l6 6-6 6"/></svg></div><div class="label">Monthly Expenses</div><div class="value font-mono" id="sum-expenses">$2,802.50</div><div class="sub" id="sum-expenses-sub">Roommate saves you $1,212.50/mo</div></div>
@@ -1518,7 +1606,8 @@ const DEFAULTS = {
   roommateRent: 0, rentP1: 0, rentP2: 0,
   savingsGoals: [],
   assets: [],
-  transactions: []
+  transactions: [],
+  incomes: []
 };
 let DATA = JSON.parse(JSON.stringify(DEFAULTS));
 DATA.debtPaymentMode = 'snowball'; // 'snowball' or 'minimum'
@@ -1674,7 +1763,7 @@ function render() {
   document.getElementById('page-subtitle').textContent = `${roommateNote}Thank you for showing up today — let's keep moving toward your goals, together.`;
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
-  renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderSubscriptions(); renderTransactions();
+  renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderSubscriptions(); renderTransactions(); renderRecentActivity();
   updatePlan(currentPlan); renderCharts(); renderTrend();
   persistUserData();
 }
@@ -2079,6 +2168,79 @@ document.getElementById('txn-form').addEventListener('submit', (e) => {
   render();
 });
 
+// ===== Quick Add (Home): Income + Expense modals, Recent Activity feed =====
+function openModal(id) { const el = document.getElementById(id); if (el) el.classList.add('open'); }
+function closeModal(id) { const el = document.getElementById(id); if (el) el.classList.remove('open'); }
+
+function openIncomeModal() {
+  const dateEl = document.getElementById('inc-date');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+  openModal('income-modal-overlay');
+}
+function openExpenseModal() {
+  const dateEl = document.getElementById('qe-date');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+  openModal('expense-modal-overlay');
+}
+
+document.getElementById('qa-open-income').addEventListener('click', openIncomeModal);
+document.getElementById('qa-open-expense').addEventListener('click', openExpenseModal);
+document.getElementById('income-modal-close').addEventListener('click', () => closeModal('income-modal-overlay'));
+document.getElementById('expense-modal-close').addEventListener('click', () => closeModal('expense-modal-overlay'));
+document.getElementById('income-modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'income-modal-overlay') closeModal('income-modal-overlay'); });
+document.getElementById('expense-modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'expense-modal-overlay') closeModal('expense-modal-overlay'); });
+
+document.getElementById('income-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const dateEl = document.getElementById('inc-date');
+  const amountEl = document.getElementById('inc-amount');
+  const sourceEl = document.getElementById('inc-source');
+  const noteEl = document.getElementById('inc-note');
+  const amount = parseFloat(amountEl.value);
+  if (!dateEl.value || !amount || amount <= 0) return;
+  if (!DATA.incomes) DATA.incomes = [];
+  DATA.incomes.push({ id: Date.now(), date: dateEl.value, amount, source: sourceEl.value, note: noteEl.value.trim() });
+  amountEl.value = '';
+  noteEl.value = '';
+  closeModal('income-modal-overlay');
+  render();
+});
+
+document.getElementById('quick-expense-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const dateEl = document.getElementById('qe-date');
+  const amountEl = document.getElementById('qe-amount');
+  const categoryEl = document.getElementById('qe-category');
+  const noteEl = document.getElementById('qe-note');
+  const amount = parseFloat(amountEl.value);
+  if (!dateEl.value || !amount || amount <= 0) return;
+  if (!DATA.transactions) DATA.transactions = [];
+  DATA.transactions.push({ id: Date.now(), date: dateEl.value, amount, category: categoryEl.value, note: noteEl.value.trim() });
+  amountEl.value = '';
+  noteEl.value = '';
+  closeModal('expense-modal-overlay');
+  render();
+});
+
+function renderRecentActivity() {
+  const listEl = document.getElementById('activity-list');
+  if (!listEl) return;
+  const incomeRows = (DATA.incomes || []).map((i) => ({ ...i, kind: 'income', label: i.source, amount: parseFloat(i.amount) || 0 }));
+  const expenseRows = (DATA.transactions || []).map((t) => ({ ...t, kind: 'expense', label: t.category, amount: parseFloat(t.amount) || 0 }));
+  const combined = incomeRows.concat(expenseRows).sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.id - a.id).slice(0, 6);
+  if (combined.length === 0) {
+    listEl.innerHTML = '<p style="font-size: var(--text-xs); color: var(--text-muted);">Nothing logged yet — use the buttons above to add income or an expense.</p>';
+    return;
+  }
+  listEl.innerHTML = combined.map((row) => `<div class="activity-item">
+    <div class="act-meta">
+      <span class="act-label">${row.label}</span>
+      <span class="act-date">${row.date}${row.note ? ' · ' + row.note : ''}</span>
+    </div>
+    <span class="act-amt ${row.kind === 'income' ? 'text-income' : 'text-expense'}">${row.kind === 'income' ? '+' : '-'}${fmtShort(row.amount)}</span>
+  </div>`).join('');
+}
+
 // ===== 50/30/20 Rule =====
 function render503020() {
   const income = finances.income2;
@@ -2335,7 +2497,7 @@ function closeHowTo() { document.getElementById('howto-overlay').classList.remov
 document.getElementById('howto-toggle').addEventListener('click', openHowTo);
 document.getElementById('howto-close').addEventListener('click', closeHowTo);
 document.getElementById('howto-overlay').addEventListener('click', (e) => { if (e.target.id === 'howto-overlay') closeHowTo(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeHowTo(); closeStatsPopup(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeHowTo(); closeStatsPopup(); closeModal('income-modal-overlay'); closeModal('expense-modal-overlay'); } });
 
 // Dashboard banner — rotating motivation + savings tips
 const BANNER_MESSAGES = [
@@ -2535,7 +2697,7 @@ function renderTrend() {
 
 // Save / Load via file download/upload
 function saveData() {
-  const toSave = { biweekly: DATA.biweekly, expenses: DATA.expenses, debts: DATA.debts, roommateRent: DATA.roommateRent, rentP1: DATA.rentP1, rentP2: DATA.rentP2, debtPaymentMode: DATA.debtPaymentMode, savingsGoals: DATA.savingsGoals, assets: DATA.assets, transactions: DATA.transactions, startingDebt: DATA.startingDebt, theme: currentTheme, appVersion: 2 };
+  const toSave = { biweekly: DATA.biweekly, expenses: DATA.expenses, debts: DATA.debts, roommateRent: DATA.roommateRent, rentP1: DATA.rentP1, rentP2: DATA.rentP2, debtPaymentMode: DATA.debtPaymentMode, savingsGoals: DATA.savingsGoals, assets: DATA.assets, transactions: DATA.transactions, incomes: DATA.incomes, startingDebt: DATA.startingDebt, theme: currentTheme, appVersion: 2 };
   const blob = new Blob([JSON.stringify(toSave, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2564,6 +2726,7 @@ function loadDataFromFile(file) {
       if (saved.savingsGoals) DATA.savingsGoals = saved.savingsGoals;
       if (saved.assets) DATA.assets = saved.assets;
       if (saved.transactions) DATA.transactions = saved.transactions;
+      if (saved.incomes) DATA.incomes = saved.incomes;
       if (saved.startingDebt !== undefined) DATA.startingDebt = saved.startingDebt;
       if (saved.theme && THEMES[saved.theme]) applyTheme(saved.theme);
       buildEditPanel();
