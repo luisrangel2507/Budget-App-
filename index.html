@@ -433,10 +433,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .onboarding-row { display: grid; grid-template-columns: 1fr 90px 60px auto; gap: var(--space-2); align-items: center; }
 .onboarding-row .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
 #ob-debt-rows .onboarding-row { grid-template-columns: 1fr 100px auto; }
+.onboarding-row-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); background: var(--surface-offset); border-radius: var(--radius-md); }
+.onboarding-row-top { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-2); align-items: center; }
+.onboarding-row-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.onboarding-row-card .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); margin: 0; }
 .onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
 .onboarding-actions .btn { flex: 1; padding: var(--space-3); }
 .sidebar-account { font-size: var(--text-xs); color: var(--text-muted); margin-top: var(--space-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 480px) { .onboarding-row { grid-template-columns: 1fr; } #ob-debt-rows .onboarding-row { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .onboarding-row { grid-template-columns: 1fr; } #ob-debt-rows .onboarding-row { grid-template-columns: 1fr; } .onboarding-row-top { grid-template-columns: 1fr auto; } .onboarding-row-top select { grid-column: 1 / -1; } }
 
 @media (max-width: 768px) {
   .sidebar { display: none; }
@@ -573,6 +577,12 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .txn-item .txn-right { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
 .txn-item .txn-amt { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .txn-remove { position: static; }
+
+/* ===== Subscriptions ===== */
+.sub-summary { font-size: var(--text-sm); margin-bottom: var(--space-3); }
+.sub-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.sub-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-3); background: var(--surface-offset); border-radius: var(--radius-md); font-size: var(--text-xs); }
+.sub-item .sub-name { font-weight: 600; }
 
 /* Edit panel: selects */
 .edit-field select { padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-offset); color: var(--text); font-size: var(--text-sm); font-family: var(--font-body); width: 100%; }
@@ -1030,6 +1040,14 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         </div>
       </div>
 
+      <!-- Subscriptions -->
+      <div class="card mt-6">
+        <div class="card-title">Subscriptions</div>
+        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3);">Tag a fixed expense as "Subscription" (Type field in the Edit panel) to track it here — Netflix, Spotify, gym, software, anything recurring.</p>
+        <div class="sub-summary" id="sub-summary"></div>
+        <div class="sub-list" id="sub-list"></div>
+      </div>
+
       <!-- Spending Log -->
       <div class="card mt-6">
         <div class="card-title">Spending Log — Track Every Purchase</div>
@@ -1450,6 +1468,9 @@ const LS_KEY = 'loc' + 'alSt' + 'orage';
 let storageOk = false;
 try { window[LS_KEY].setItem('_test', '1'); window[LS_KEY].removeItem('_test'); storageOk = true; } catch (e) {}
 
+// Fixed-expense type tags (separate from the need/want/savings 50/30/20 category)
+const EXPENSE_TYPES = ['Rent', 'Mortgage', 'Car Payment', 'Utilities', 'Insurance', 'Groceries', 'Subscription', 'Investment', 'Other'];
+
 // ===== Default sample data (round demo numbers) =====
 const DEFAULTS = {
   biweekly: 0,
@@ -1614,7 +1635,7 @@ function render() {
   document.getElementById('page-subtitle').textContent = `${roommateNote}Thank you for showing up today — let's keep moving toward your goals, together.`;
 
   renderPaycheckAllocation(); renderExpenseTable(); renderDebtCards(); renderBudgetPlanRows(); renderRoommateImpact(); renderQuickRef();
-  renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderTransactions();
+  renderNetWorth(); renderSavingsGoals(); renderBillCalendar(); renderSubscriptions(); renderTransactions();
   updatePlan(currentPlan); renderCharts(); renderTrend();
   persistUserData();
 }
@@ -1906,6 +1927,23 @@ function renderBillCalendar() {
   }).join('');
 }
 
+// ===== Subscriptions =====
+function renderSubscriptions() {
+  const summaryEl = document.getElementById('sub-summary');
+  const listEl = document.getElementById('sub-list');
+  if (!listEl) return;
+  const subs = (DATA.expenses || []).filter((e) => e.type === 'Subscription');
+  const total = subs.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  if (summaryEl) {
+    summaryEl.innerHTML = subs.length > 0
+      ? `<strong>${subs.length}</strong> active subscription${subs.length === 1 ? '' : 's'} costing <strong class="text-expense">${fmtShort(total)}/month</strong> (${fmtShort(total * 12)}/year).`
+      : `No subscriptions tagged yet.`;
+  }
+  listEl.innerHTML = subs.length === 0
+    ? '<p style="font-size: var(--text-xs); color: var(--text-muted);">Tag any fixed expense as "Subscription" in the Edit panel to track it here.</p>'
+    : subs.slice().sort((a, b) => (parseFloat(b.amount) || 0) - (parseFloat(a.amount) || 0)).map((e) => `<div class="sub-item"><span class="sub-name">${e.label}</span><span class="sub-amt font-mono text-expense">${fmtShort(e.amount)}/mo</span></div>`).join('');
+}
+
 // ===== Spending Log (real transactions vs. fixed budget) =====
 const TXN_CATEGORY_COLORS = { Groceries: '#10b981', Dining: '#f97316', Transport: '#0ea5e9', Shopping: '#8b5cf6', Entertainment: '#f43f5e', Bills: '#f59e0b', Health: '#14b8a6', Other: '#6b7280' };
 let txnCategoryChartInstance = null;
@@ -2107,7 +2145,7 @@ function buildEditPanel() {
   document.getElementById('inp-roommate-rent').value = DATA.roommateRent;
   document.getElementById('inp-rent-p1').value = DATA.rentP1;
   document.getElementById('inp-rent-p2').value = DATA.rentP2;
-  document.getElementById('expense-inputs').innerHTML = DATA.expenses.map((e, i) => `<div class="edit-field edit-field-removable"><button class="btn-remove" data-type="expense" data-idx="${i}" title="Remove">✕</button><label for="inp-exp-name-${i}">Expense Name</label><input type="text" class="exp-name-input" id="inp-exp-name-${i}" data-idx="${i}" value="${e.label}"><label for="inp-exp-${i}">Amount${e.split ? ' (your half)' : ''}</label><input type="number" id="inp-exp-${i}" data-idx="${i}" step="0.50" min="0" value="${e.amount}"><label for="inp-exp-due-${i}">Due Day (1-31)</label><input type="number" id="inp-exp-due-${i}" data-idx="${i}" step="1" min="1" max="31" value="${e.dueDay || 1}"><label for="inp-exp-cat-${i}">50/30/20 Category</label><select id="inp-exp-cat-${i}" data-idx="${i}"><option value="need"${(e.category||'need')==='need'?' selected':''}>Need</option><option value="want"${e.category==='want'?' selected':''}>Want</option><option value="savings"${e.category==='savings'?' selected':''}>Savings</option></select><span class="hint">${e.split ? `Full: $${e.fullAmount}, you pay half` : 'Your full amount'}</span></div>`).join('');
+  document.getElementById('expense-inputs').innerHTML = DATA.expenses.map((e, i) => `<div class="edit-field edit-field-removable"><button class="btn-remove" data-type="expense" data-idx="${i}" title="Remove">✕</button><label for="inp-exp-name-${i}">Expense Name</label><input type="text" class="exp-name-input" id="inp-exp-name-${i}" data-idx="${i}" value="${e.label}"><label for="inp-exp-type-${i}">Type</label><select id="inp-exp-type-${i}" data-idx="${i}">${EXPENSE_TYPES.map(t => `<option value="${t}"${(e.type || 'Other') === t ? ' selected' : ''}>${t}</option>`).join('')}</select><label for="inp-exp-${i}">Amount${e.split ? ' (your half)' : ''}</label><input type="number" id="inp-exp-${i}" data-idx="${i}" step="0.50" min="0" value="${e.amount}"><label for="inp-exp-due-${i}">Due Day (1-31)</label><input type="number" id="inp-exp-due-${i}" data-idx="${i}" step="1" min="1" max="31" value="${e.dueDay || 1}"><label for="inp-exp-cat-${i}">50/30/20 Category</label><select id="inp-exp-cat-${i}" data-idx="${i}"><option value="need"${(e.category||'need')==='need'?' selected':''}>Need</option><option value="want"${e.category==='want'?' selected':''}>Want</option><option value="savings"${e.category==='savings'?' selected':''}>Savings</option></select><span class="hint">${e.split ? `Full: $${e.fullAmount}, you pay half` : 'Your full amount'}</span></div>`).join('');
   const allSplit = DATA.expenses.filter(e => e.label !== 'Car Payment' && e.label !== 'Car Insurance' && e.label !== 'Groceries' && e.label !== 'Gas (car)' && e.label !== 'Streaming');
   document.getElementById('split-checkboxes').innerHTML = allSplit.map((e) => { const idx = DATA.expenses.indexOf(e); return `<div class="split-row"><input type="checkbox" id="inp-split-${idx}" data-idx="${idx}" ${e.split ? 'checked' : ''}><label for="inp-split-${idx}">Split ${e.label} ($${e.fullAmount || e.amount})</label></div>`; }).join('');
   document.getElementById('debt-inputs').innerHTML = DATA.debts.map((d, i) => `<div class="edit-field edit-field-removable"><button class="btn-remove" data-type="debt" data-idx="${i}" title="Remove">✕</button><label for="inp-debt-name-${i}">Debt ${i + 1} Name</label><input type="text" id="inp-debt-name-${i}" data-idx="${i}" value="${d.name}"><label for="inp-debt-amt-${i}" style="margin-top: var(--space-2);">Debt ${i + 1} Amount</label><input type="number" id="inp-debt-amt-${i}" data-idx="${i}" step="50" min="0" value="${d.amount}"></div>`).join('');
@@ -2145,6 +2183,7 @@ function attachEditListeners() {
   document.querySelectorAll('[id^="inp-exp-due-"]').forEach(inp => { inp.addEventListener('input', (e) => { const idx = parseInt(e.target.dataset.idx); DATA.expenses[idx].dueDay = Math.max(1, Math.min(31, parseInt(e.target.value) || 1)); renderBillCalendar(); render503020(); }); });
   // Category selects
   document.querySelectorAll('[id^="inp-exp-cat-"]').forEach(sel => { sel.addEventListener('change', (e) => { const idx = parseInt(e.target.dataset.idx); DATA.expenses[idx].category = e.target.value; render(); }); });
+  document.querySelectorAll('[id^="inp-exp-type-"]').forEach(sel => { sel.addEventListener('change', (e) => { const idx = parseInt(e.target.dataset.idx); DATA.expenses[idx].type = e.target.value; render(); }); });
   // Savings goals
   document.querySelectorAll('[id^="inp-goal-name-"]').forEach(inp => { inp.addEventListener('input', (e) => { const idx = parseInt(e.target.dataset.idx); DATA.savingsGoals[idx].name = e.target.value; renderSavingsGoals(); }); });
   document.querySelectorAll('[id^="inp-goal-target-"]').forEach(inp => { inp.addEventListener('input', (e) => { const idx = parseInt(e.target.dataset.idx); DATA.savingsGoals[idx].target = parseFloat(e.target.value) || 0; renderSavingsGoals(); }); });
@@ -2164,7 +2203,7 @@ function setupPersistentButtons() {
   if (persistentButtonsWired) return;
   persistentButtonsWired = true;
   const wire = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
-  wire('btn-add-expense', () => { const newIdx = DATA.expenses.length; DATA.expenses.push({ name: 'New Expense', label: 'New Expense', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need' }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-exp-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
+  wire('btn-add-expense', () => { const newIdx = DATA.expenses.length; DATA.expenses.push({ name: 'New Expense', label: 'New Expense', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need', type: 'Other' }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-exp-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
   wire('btn-add-debt', () => { const newIdx = DATA.debts.length; DATA.debts.push({ name: 'New Debt', amount: 0 }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-debt-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
   wire('btn-add-goal', () => { if (!DATA.savingsGoals) DATA.savingsGoals = []; const newIdx = DATA.savingsGoals.length; DATA.savingsGoals.push({ name: 'New Goal', target: 1000, current: 0 }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-goal-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
   wire('btn-add-asset', () => { if (!DATA.assets) DATA.assets = []; const newIdx = DATA.assets.length; DATA.assets.push({ name: 'New Asset', amount: 0 }); buildEditPanel(); render(); setTimeout(() => { const nameInput = document.getElementById('inp-asset-name-' + newIdx); if (nameInput) { nameInput.focus(); nameInput.select(); } }, 50); });
@@ -2649,11 +2688,16 @@ function showObStep(n) {
 function renderObExpenseRows() {
   const wrap = document.getElementById('ob-expense-rows');
   if (!wrap) return;
-  wrap.innerHTML = obExpenses.map((e, i) => `<div class="onboarding-row">
-    <input type="text" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="name" placeholder="Name" value="${e.name || ''}">
-    <input type="number" class="lock-input auth-left ob-row-amt ob-row-input" data-idx="${i}" data-field="amount" placeholder="$" min="0" value="${e.amount || ''}">
-    <input type="number" class="lock-input auth-left ob-row-day ob-row-input" data-idx="${i}" data-field="dueDay" placeholder="Day" min="1" max="31" value="${e.dueDay || ''}">
-    <button type="button" class="btn-remove ob-row-remove" data-idx="${i}">✕</button>
+  wrap.innerHTML = obExpenses.map((e, i) => `<div class="onboarding-row-card">
+    <div class="onboarding-row-top">
+      <input type="text" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="name" placeholder="Name" value="${e.name || ''}">
+      <select class="lock-input auth-left ob-row-select" data-idx="${i}" data-field="type">${EXPENSE_TYPES.map((t) => `<option value="${t}"${(e.type || 'Other') === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      <button type="button" class="btn-remove ob-row-remove" data-idx="${i}">✕</button>
+    </div>
+    <div class="onboarding-row-bottom">
+      <input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="amount" placeholder="Amount $" min="0" value="${e.amount || ''}">
+      <input type="number" class="lock-input auth-left ob-row-input" data-idx="${i}" data-field="dueDay" placeholder="Due day" min="1" max="31" value="${e.dueDay || ''}">
+    </div>
   </div>`).join('');
   wireObRows(wrap, obExpenses, renderObExpenseRows);
 }
@@ -2679,13 +2723,16 @@ function wireObRows(wrap, arr, rerender) {
       else arr[idx].name = inp.value;
     });
   });
+  wrap.querySelectorAll('.ob-row-select').forEach((sel) => {
+    sel.addEventListener('change', () => { arr[parseInt(sel.dataset.idx)][sel.dataset.field] = sel.value; });
+  });
   wrap.querySelectorAll('.ob-row-remove').forEach((btn) => {
     btn.addEventListener('click', () => { arr.splice(parseInt(btn.dataset.idx), 1); rerender(); });
   });
 }
 
 document.getElementById('ob-add-expense').addEventListener('click', () => {
-  obExpenses.push({ name: '', label: '', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need' });
+  obExpenses.push({ name: '', label: '', amount: 0, fullAmount: 0, split: false, dueDay: 1, category: 'need', type: 'Other' });
   renderObExpenseRows();
 });
 document.getElementById('ob-add-debt').addEventListener('click', () => {
