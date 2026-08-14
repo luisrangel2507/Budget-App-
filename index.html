@@ -699,6 +699,13 @@ p, li { text-wrap: pretty; max-width: 72ch; }
     </div>
     <div class="health-status" id="m-health-status">On Track</div>
   </div>
+  <div class="sidebar-account" id="m-sidebar-account" style="text-align: center; margin-top: var(--space-3);"></div>
+  <div class="sidebar-actions" style="border-top: 1px solid var(--divider); margin-top: var(--space-3); padding-top: var(--space-3);">
+    <button class="action-btn" id="m-edit-toggle" title="Edit your numbers" aria-label="Edit your numbers"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+    <button class="action-btn" id="m-howto-toggle" title="How to use" aria-label="How to use"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    <button class="action-btn" id="m-lock-now-toggle" title="Lock now" aria-label="Lock now" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+    <button class="action-btn" id="m-sign-out-toggle" title="Sign out" aria-label="Sign out" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+  </div>
 </div>
 
 <div class="app-layout">
@@ -1867,6 +1874,18 @@ document.getElementById('mobile-overlay').addEventListener('click', () => {
   document.getElementById('mobile-overlay').classList.remove('show');
 });
 
+// Mobile nav account actions — proxy to the desktop buttons so the logic
+// (edit panel, how-to modal, lock, sign out) lives in one place, then
+// close the slide-out menu so the user sees the result.
+function closeMobileNav() {
+  document.getElementById('mobile-nav').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('show');
+}
+document.getElementById('m-edit-toggle').addEventListener('click', () => { document.getElementById('edit-toggle').click(); closeMobileNav(); });
+document.getElementById('m-howto-toggle').addEventListener('click', () => { document.getElementById('howto-toggle').click(); closeMobileNav(); });
+document.getElementById('m-lock-now-toggle').addEventListener('click', () => { document.getElementById('lock-now-toggle').click(); closeMobileNav(); });
+document.getElementById('m-sign-out-toggle').addEventListener('click', () => { document.getElementById('sign-out-toggle').click(); closeMobileNav(); });
+
 // Edit panel toggle
 document.getElementById('edit-toggle').addEventListener('click', () => {
   document.getElementById('edit-panel').classList.toggle('open');
@@ -2053,10 +2072,9 @@ function setAuthMode(mode) {
 }
 
 function updateAccountUI(user) {
-  const el = document.getElementById('sidebar-account');
-  if (el) el.textContent = user ? (user.uid === 'local-guest' ? 'Guest (testing mode)' : (user.displayName || user.email || 'Signed in')) : '';
-  const signOutBtn = document.getElementById('sign-out-toggle');
-  if (signOutBtn) signOutBtn.style.display = user ? '' : 'none';
+  const label = user ? (user.uid === 'local-guest' ? 'Guest (testing mode)' : (user.displayName || user.email || 'Signed in')) : '';
+  ['sidebar-account', 'm-sidebar-account'].forEach((id) => { const el = document.getElementById(id); if (el) el.textContent = label; });
+  ['sign-out-toggle', 'm-sign-out-toggle'].forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = user ? '' : 'none'; });
 }
 
 function onUserSignedIn(user) {
@@ -2331,11 +2349,10 @@ function setLockMode(mode) {
 function updateSecuritySection() {
   const status = document.getElementById('security-status');
   const removeBtn = document.getElementById('btn-remove-pin');
-  const lockNowBtn = document.getElementById('lock-now-toggle');
   const hasPin = !!getSavedPinHash();
   if (status) status.textContent = hasPin ? 'PIN protection is on for this device.' : 'No PIN set — anyone opening this file can see your budget.';
   if (removeBtn) removeBtn.style.display = hasPin ? '' : 'none';
-  if (lockNowBtn) lockNowBtn.style.display = hasPin ? '' : 'none';
+  ['lock-now-toggle', 'm-lock-now-toggle'].forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = hasPin ? '' : 'none'; });
 }
 
 function initLock() {
