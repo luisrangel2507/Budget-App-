@@ -514,6 +514,25 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .bill-cal-legend .swatch.med { background: var(--debt); }
 .bill-cal-legend .swatch.low { background: var(--income); }
 
+/* ===== Bill Calendar (true month grid) ===== */
+.card-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-1); }
+.card-title-row .card-title { margin-bottom: 0; }
+.cal-month-label { font-family: var(--font-display); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+.cal-weekdays div { font-family: var(--font-display); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-cell { min-height: 76px; background: var(--surface-offset); border: 1px solid var(--divider); border-radius: var(--radius-sm); padding: 4px; overflow: hidden; }
+.cal-day-cell.empty { background: transparent; border-color: transparent; }
+.cal-day-cell.today { border-color: var(--info); box-shadow: 0 0 0 1px var(--info); }
+.cal-day-cell.due-soon { border-color: var(--crimson); }
+.cal-day-num { font-family: var(--font-display); font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px; }
+.cal-day-cell.today .cal-day-num { color: var(--info); }
+.cal-bill-chip { font-size: 8px; font-weight: 600; padding: 1px 4px; border-radius: 4px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-bill-chip.high { background: var(--expense-bg); color: var(--expense); }
+.cal-bill-chip.med { background: var(--debt-bg); color: var(--debt); }
+.cal-bill-chip.low { background: var(--income-bg); color: var(--income); }
+@media (max-width: 640px) { .cal-day-cell { min-height: 54px; padding: 2px; } .cal-bill-chip { font-size: 7px; } .cal-weekdays div { font-size: 8px; } }
+
 /* ===== 50/30/20 Rule ===== */
 .rule-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 768px) { .rule-grid { grid-template-columns: 1fr; } }
@@ -1031,9 +1050,13 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 
       <!-- Bill Calendar -->
       <div class="card mt-6">
-        <div class="card-title">Bill Calendar — By Due Date</div>
-        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3);">Your bills spread across the month. Color-coded by size: red (over $200), orange ($50–200), green (under $50).</p>
-        <div class="bill-cal-grid" id="bill-cal-grid"></div>
+        <div class="card-title-row">
+          <div class="card-title">Bill Calendar</div>
+          <div class="cal-month-label" id="cal-month-label">—</div>
+        </div>
+        <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-3);">Every recurring fixed expense, always tracked on its due date. Color-coded by size: red (over $200), orange ($50–200), green (under $50).</p>
+        <div class="cal-weekdays"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div class="cal-grid" id="bill-cal-grid"></div>
         <div class="bill-cal-legend">
           <div class="leg"><span class="swatch high"></span> High (over $200)</div>
           <div class="leg"><span class="swatch med"></span> Medium ($50–200)</div>
@@ -1911,22 +1934,34 @@ function daysUntilDue(dueDay) {
 function renderBillCalendar() {
   const grid = document.getElementById('bill-cal-grid');
   if (!grid) return;
-  const bills = (DATA.expenses || []).slice().sort((a, b) => (parseInt(a.dueDay) || 0) - (parseInt(b.dueDay) || 0));
-  if (bills.length === 0) { grid.innerHTML = '<p style="font-size: var(--text-xs); color: var(--text-muted);">No bills to display.</p>'; return; }
+  const labelEl = document.getElementById('cal-month-label');
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth(), todayDate = now.getDate();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  if (labelEl) labelEl.textContent = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
   const tier = (amt) => amt > 200 ? 'high' : (amt >= 50 ? 'med' : 'low');
-  grid.innerHTML = bills.map(e => {
-    const day = parseInt(e.dueDay) || 1;
-    const cls = tier(e.amount);
-    const daysLeft = daysUntilDue(day);
-    const dueSoon = daysLeft <= 5;
-    const badgeText = daysLeft === 0 ? 'Due Today' : daysLeft === 1 ? 'Due Tomorrow' : `Due in ${daysLeft}d`;
-    return `<div class="bill-cal-day ${cls}${dueSoon ? ' due-soon' : ''}">
-      ${dueSoon ? `<span class="due-soon-badge">${badgeText}</span>` : ''}
-      <div class="bcd-day">Day ${day}</div>
-      <div class="bcd-name">${e.label}</div>
-      <div class="bcd-amt">${fmtShort(e.amount)}</div>
+  const billsByDay = {};
+  (DATA.expenses || []).forEach((e) => {
+    const day = Math.min(Math.max(parseInt(e.dueDay) || 1, 1), daysInMonth);
+    if (!billsByDay[day]) billsByDay[day] = [];
+    billsByDay[day].push(e);
+  });
+
+  let html = '';
+  for (let i = 0; i < firstWeekday; i++) html += '<div class="cal-day-cell empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const bills = billsByDay[d] || [];
+    const isToday = d === todayDate;
+    const daysLeft = daysUntilDue(d);
+    const dueSoon = bills.length > 0 && daysLeft >= 0 && daysLeft <= 5;
+    html += `<div class="cal-day-cell${isToday ? ' today' : ''}${dueSoon ? ' due-soon' : ''}">
+      <div class="cal-day-num">${d}</div>
+      ${bills.map((e) => `<div class="cal-bill-chip ${tier(e.amount)}" title="${e.label}: ${fmtShort(e.amount)}">${e.label} · ${fmtShort(e.amount)}</div>`).join('')}
     </div>`;
-  }).join('');
+  }
+  grid.innerHTML = html;
 }
 
 // ===== Subscriptions =====
