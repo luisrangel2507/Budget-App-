@@ -1,0 +1,12 @@
+{
+  "name": "budget-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Budget Agent — offline-first personal finance dashboard, served as a static single-page app.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
