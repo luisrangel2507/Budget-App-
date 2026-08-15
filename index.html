@@ -1828,7 +1828,7 @@ function render() {
   document.getElementById('total-credits-val').textContent = fmtShort(actualCashflow);
   document.getElementById('total-credits-val').style.color = actualCashflow >= 0 ? 'var(--income)' : 'var(--expense)';
 
-  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(99, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, finances.surplus2 * 12))) * 100))) : 100;
+  const healthPct = finances.totalDebt > 0 ? Math.round(Math.max(0, Math.min(99, (1 - finances.totalDebt / (finances.totalDebt + Math.max(1, actualCashflow * 12))) * 100))) : 100;
   document.getElementById('health-pct').textContent = healthPct + '%';
   document.getElementById('health-circle').setAttribute('stroke-dashoffset', 213.6 * (1 - healthPct / 100));
   document.getElementById('health-status').textContent = healthPct > 70 ? 'On Track' : healthPct > 40 ? 'Caution' : 'Critical';
@@ -1838,7 +1838,7 @@ function render() {
   if (mPct) mPct.textContent = healthPct + '%';
   if (mCircle) mCircle.setAttribute('stroke-dashoffset', 213.6 * (1 - healthPct / 100));
   if (mStatus) mStatus.textContent = healthPct > 70 ? 'On Track' : healthPct > 40 ? 'Caution' : 'Critical';
-  renderHealthHero(healthPct);
+  renderHealthHero(healthPct, actualIncome, actualCashflow);
   updateDebtTabMode();
 
   document.querySelectorAll('.debt-mode-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.mode === DATA.debtPaymentMode); });
@@ -2002,7 +2002,7 @@ function renderNetWorth() {
 }
 
 // ===== Financial Health Hero =====
-function renderHealthHero(healthPct) {
+function renderHealthHero(healthPct, actualIncome, actualCashflow) {
   const hero = document.getElementById('health-hero');
   if (!hero) return;
   const cls = healthPct > 70 ? 'good' : healthPct > 40 ? 'caution' : 'critical';
@@ -2019,8 +2019,10 @@ function renderHealthHero(healthPct) {
   const statusEl = document.getElementById('hero-health-status'); if (statusEl) statusEl.textContent = statusMap[cls][0];
   const msgEl = document.getElementById('hero-health-msg'); if (msgEl) msgEl.textContent = statusMap[cls][1];
 
+  const incomeForRate = actualIncome != null ? actualIncome : finances.income2;
+  const cashflowForRate = actualCashflow != null ? actualCashflow : finances.surplus2;
   const dti = finances.income2 > 0 ? Math.round((finances.debtPaymentAmount / finances.income2) * 100) : 0;
-  const savingsRate = finances.income2 > 0 ? Math.round((Math.max(0, finances.surplus2) / finances.income2) * 100) : 0;
+  const savingsRate = incomeForRate > 0 ? Math.round((Math.max(0, cashflowForRate) / incomeForRate) * 100) : 0;
   const dtiEl = document.getElementById('hero-dti'); if (dtiEl) dtiEl.textContent = dti + '%';
   const srEl = document.getElementById('hero-savings-rate'); if (srEl) srEl.textContent = savingsRate + '%';
 
