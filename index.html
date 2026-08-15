@@ -484,6 +484,9 @@ p, li { text-wrap: pretty; max-width: 72ch; }
 .onboarding-row-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .onboarding-row-card .lock-input { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); margin: 0; }
 .ob-field-label { display: block; font-family: var(--font-display); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+.windfall-preview { display: flex; flex-direction: column; gap: var(--space-2); background: var(--surface-offset); border-radius: var(--radius-md); padding: var(--space-3); margin-top: var(--space-4); }
+.windfall-preview-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--text-xs); color: var(--text-muted); }
+.windfall-preview-row strong { font-family: var(--font-display); color: var(--text); font-size: var(--text-sm); }
 .onboarding-row-top .ob-row-remove, .onboarding-row .ob-row-remove { position: static; }
 .onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
 .onboarding-actions .btn { flex: 1; padding: var(--space-3); }
@@ -896,6 +899,28 @@ p, li { text-wrap: pretty; max-width: 72ch; }
         <input type="text" id="inc-note" class="lock-input auth-left" placeholder="Note (optional)" style="margin-top: var(--space-3);">
         <button type="submit" class="btn btn-save" style="width:100%; margin-top: var(--space-4);">Add Income</button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Windfall Debt Payoff Prompt -->
+<div class="modal-overlay" id="windfall-modal-overlay">
+  <div class="modal" role="dialog" aria-labelledby="windfall-modal-title" aria-modal="true">
+    <div class="modal-header">
+      <h3 id="windfall-modal-title">Put It Toward Debt?</h3>
+      <button class="modal-close" id="windfall-modal-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-4);" id="windfall-intro"></p>
+      <label class="ob-field-label" for="windfall-amount">Amount to apply to debt</label>
+      <input type="number" id="windfall-amount" class="lock-input auth-left" min="0" step="1" style="margin-top: 4px;">
+      <div class="windfall-preview" id="windfall-preview">
+        <div class="windfall-preview-row"><span>Remaining split</span><strong id="windfall-remaining-income"></strong></div>
+        <div class="windfall-preview-row"><span>New debt balance</span><strong id="windfall-new-balance"></strong></div>
+        <div class="windfall-preview-row"><span>Debt-free estimate</span><strong id="windfall-new-payoff"></strong></div>
+      </div>
+      <button type="button" class="btn btn-save" id="windfall-apply" style="width:100%; margin-top: var(--space-4);">Apply to Debt</button>
+      <button type="button" class="lock-forgot" id="windfall-skip" style="width:100%; text-align:center; margin-top: var(--space-2);">Skip — keep it all as income</button>
     </div>
   </div>
 </div>
@@ -2320,7 +2345,78 @@ document.getElementById('income-form').addEventListener('submit', (e) => {
   noteEl.value = '';
   closeModal('income-modal-overlay');
   render();
+  const totalDebt = (DATA.debts || []).reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
+  if (totalDebt > 0) {
+    openWindfallModal(amount, sourceEl.value);
+  }
 });
+
+// ===== Windfall Debt Payoff Prompt =====
+let windfallLoggedAmount = 0;
+function openWindfallModal(amount, source) {
+  windfallLoggedAmount = amount;
+  const totalDebt = (DATA.debts || []).reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
+  const suggested = Math.min(amount, totalDebt);
+  const introEl = document.getElementById('windfall-intro');
+  if (introEl) introEl.textContent = `You just added ${fmtShort(amount)} from ${source}. Want to put some of it toward your ${fmtShort(totalDebt)} in debt?`;
+  const inputEl = document.getElementById('windfall-amount');
+  if (inputEl) { inputEl.max = suggested; inputEl.min = 0; inputEl.value = suggested; }
+  updateWindfallPreview(amount);
+  openModal('windfall-modal-overlay');
+}
+
+function updateWindfallPreview(loggedAmount) {
+  const inputEl = document.getElementById('windfall-amount');
+  const totalDebt = (DATA.debts || []).reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
+  const cap = Math.max(0, Math.min(loggedAmount, totalDebt));
+  let value = parseFloat(inputEl.value) || 0;
+  value = Math.max(0, Math.min(value, cap));
+  const newBalance = Math.max(0, totalDebt - value);
+  const remainingIncomeEl = document.getElementById('windfall-remaining-income');
+  if (remainingIncomeEl) remainingIncomeEl.textContent = `${fmtShort(value)} to debt, ${fmtShort(loggedAmount - value)} stays income`;
+  const balEl = document.getElementById('windfall-new-balance');
+  if (balEl) balEl.textContent = fmtShort(newBalance);
+  const payoffEl = document.getElementById('windfall-new-payoff');
+  if (payoffEl && finances) {
+    const plan = finances.plans[currentPlan] || finances.plans.balanced;
+    const remainingDebts = applyWindfallToDebts(value, false).map((d) => d.amount);
+    const sim = simulateSnowball(remainingDebts, plan.monthlyDebt, finances.ccMinimums, plan.thirdDebt);
+    const before = plan.debtFreeMonths === 0 ? 'Already debt-free' : fmtDebtFreeLong(plan.debtFreeMonths);
+    const after = sim.months === 0 ? 'Already debt-free' : fmtDebtFreeLong(sim.months);
+    payoffEl.textContent = value > 0 ? `${after} (was ${before})` : before;
+  }
+}
+
+// Returns a new debts array with `amount` reduced snowball-style (smallest balance first).
+// dryRun=false actually mutates a clone and returns it for preview; apply=true path reuses the same logic to commit.
+function applyWindfallToDebts(amount, commit) {
+  const sorted = (DATA.debts || []).map((d, i) => ({ ...d, origIdx: i })).sort((a, b) => a.amount - b.amount);
+  let remaining = amount;
+  for (const d of sorted) {
+    if (remaining <= 0) break;
+    const pay = Math.min(remaining, d.amount);
+    d.amount -= pay;
+    remaining -= pay;
+  }
+  const result = sorted.sort((a, b) => a.origIdx - b.origIdx).map(({ origIdx, ...d }) => d);
+  if (commit) {
+    DATA.debts = result.filter((d) => d.amount > 0.005);
+  }
+  return result;
+}
+
+document.getElementById('windfall-amount').addEventListener('input', () => {
+  updateWindfallPreview(windfallLoggedAmount);
+});
+document.getElementById('windfall-apply').addEventListener('click', () => {
+  const inputEl = document.getElementById('windfall-amount');
+  const value = Math.max(0, parseFloat(inputEl.value) || 0);
+  if (value > 0) { applyWindfallToDebts(value, true); render(); }
+  closeModal('windfall-modal-overlay');
+});
+document.getElementById('windfall-skip').addEventListener('click', () => closeModal('windfall-modal-overlay'));
+document.getElementById('windfall-modal-close').addEventListener('click', () => closeModal('windfall-modal-overlay'));
+document.getElementById('windfall-modal-overlay').addEventListener('click', (e) => { if (e.target.id === 'windfall-modal-overlay') closeModal('windfall-modal-overlay'); });
 
 document.getElementById('quick-expense-form').addEventListener('submit', (e) => {
   e.preventDefault();
